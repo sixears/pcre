@@ -10,37 +10,7 @@ module PCRE.REMatch
   )
 where
 
-import Prelude  ( (+), (-) )
-
--- base --------------------------------
-
-import Control.Monad  ( return )
-import Data.Eq        ( Eq )
-import Data.Function  ( ($) )
-import System.Exit    ( ExitCode )
-import System.IO      ( IO )
-import Text.Show      ( Show )
-
--- base-unicode-symbols ----------------
-
-import Numeric.Natural.Unicode  ( ℕ )
-
--- index -------------------------------
-
-import Index  ( HasIndex( Elem, Indexer, index ), (!!) )
-
--- lens --------------------------------
-
-import Control.Lens.Lens  ( Lens', lens )
-
--- more-unicode ------------------------
-
-import Data.MoreUnicode.Either   ( 𝔼 )
-import Data.MoreUnicode.Functor  ( (⊳), (⊲) )
-import Data.MoreUnicode.Lens     ( (⊣) )
-import Data.MoreUnicode.Maybe    ( 𝕄, pattern 𝕵, pattern 𝕹 )
-import Data.MoreUnicode.String   ( 𝕊 )
-import Data.MoreUnicode.Text     ( 𝕋 )
+import Base1T
 
 -- regex -------------------------------
 
@@ -57,25 +27,9 @@ import Text.RE.Replace  ( Capture( captureLength, captureOffset
 
 import Text.RE.PCRE.Text  ( RE, (?=~), reSource )
 
--- tasty -------------------------------
-
-import Test.Tasty  ( TestTree, testGroup )
-
--- tasty-hunit -------------------------
-
-import Test.Tasty.HUnit  ( (@=?), testCase )
-
--- tasty-plus --------------------------
-
-import TastyPlus  ( assertRight, runTestsP, runTestsReplay, runTestTree )
-
 -- text --------------------------------
 
 import Data.Text  ( drop, take )
-
--- tfmt --------------------------------
-
-import Text.Fmt  ( fmt )
 
 -- unordered-containers ----------------
 
@@ -93,6 +47,8 @@ import PCRE.GroupID   ( Groupable( group ), GroupID( GIDName, GIDNum )
 
 --------------------------------------------------------------------------------
 
+{-| details of a regular expression match, including pre- & post-, and capture
+    groups by name & position -}
 data REMatch α = REMatch { _sourceText     ∷ α
                          , _sourceGroups   ∷ [α]
                          , _sourceCaptures ∷ HashMap 𝕋 α
@@ -124,18 +80,23 @@ groupTests =
 
 ----------------------------------------
 
+{-| matched stuff (typically 𝕋, but doesn't have to be) -}
 sourceText ∷ Lens' (REMatch α) α
 sourceText = lens _sourceText (\ rem st → rem { _sourceText = st })
 
+{-| match captures, by position -}
 sourceGroups ∷ Lens' (REMatch α) [α]
 sourceGroups = lens _sourceGroups (\ rem sg → rem { _sourceGroups = sg })
 
+{-| match captures, by name -}
 sourceCaptures ∷ Lens' (REMatch α) (HashMap 𝕋 α)
 sourceCaptures = lens _sourceCaptures (\ rem sc → rem { _sourceCaptures = sc })
 
+{-| the stuff prior any match -}
 sourcePre ∷ Lens' (REMatch α) α
 sourcePre = lens _sourcePre (\ rem st → rem { _sourcePre = st })
 
+{-| the stuff after any match -}
 sourcePost ∷ Lens' (REMatch α) α
 sourcePost = lens _sourcePost (\ rem st → rem { _sourcePost = st })
 
@@ -147,6 +108,8 @@ instance HasIndex (REMatch α) where
   index (GIDNum  0) m = 𝕵 $ m ⊣ sourceText
   index (GIDNum  i) m = (m ⊣ sourceGroups) !! (i -1)
 
+{-| convert a `Match 𝕋` to a `𝕄 (REMatch 𝕋)` (in particular, creating a
+    `HashMap` of named groups) -}
 reMatch ∷ Match 𝕋 → 𝕄 (REMatch 𝕋)
 reMatch m = matchCaptures m ⊲
   \ (cap,caps) →
@@ -160,14 +123,17 @@ reMatch m = matchCaptures m ⊲
       in REMatch (capturedText cap) (capturedText ⊳ caps) cs pre post
 
 
+{-| match some `𝕋` against an `RE`; returning an `REMatch` -}
 (=~) ∷ RE → 𝕋 → 𝕄 (REMatch 𝕋)
 r =~ t = reMatch (t ?=~ r)
 
+{- | alias for `=~` -}
 (≃) ∷ RE → 𝕋 → 𝕄 (REMatch 𝕋)
 r ≃ t = reMatch (t ?=~ r)
 
 --------------------------------------------------------------------------------
 
+{-| unit tests -}
 tests ∷ TestTree
 tests = testGroup "REMatch" [ groupTests ]
 

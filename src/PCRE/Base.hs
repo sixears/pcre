@@ -4,31 +4,11 @@ module PCRE.Base
   ( REParsecable(..), compRE )
 where
 
--- base --------------------------------
-
-import Data.Bifunctor  ( first )
-
--- base-unicode-symbols ----------------
-
-import Data.Function.Unicode    ( (∘) )
-
--- lens --------------------------------
-
-import Control.Lens.Review  ( (#) )
+import Base1
 
 -- monaderror-io -----------------------
 
 import MonadError  ( fromRight )
-
--- mtl ---------------------------------
-
-import Control.Monad.Except  ( MonadError )
-
--- more-unicode ------------------------
-
-import Data.MoreUnicode.Either   ( 𝔼 )
-import Data.MoreUnicode.Functor  ( (⊳) )
-import Data.MoreUnicode.Text     ( 𝕋 )
 
 -- parsec-plus -------------------------
 
@@ -63,6 +43,7 @@ instance Parsecable REParsecable where
 
 ------------------------------------------------------------
 
+{- | compile a regular expression, in a MonadError context -}
 compRE ∷ ∀ ε η . (AsREParseError ε, MonadError ε η) ⇒ 𝕋 → η RE
 compRE =
   fromRight ∘ first (_REParseError #) ∘ compileRegex @(𝔼 REParseError) ∘ unpack

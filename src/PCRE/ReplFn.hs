@@ -7,51 +7,16 @@ module PCRE.ReplFn
   ( ReplArg(..), ReplFn(..), applyFn, replFns )
 where
 
-import Prelude  ( Float, (-) )
+import Base1
+
+import Prelude  ( Float )
 
 -- base --------------------------------
 
-import Control.Applicative  ( pure, many )
-import Control.Monad        ( return )
-import Data.Eq              ( Eq )
-import Data.Function        ( ($) )
 import Data.List            ( dropWhile )
-import Data.List.NonEmpty   ( NonEmpty( (:|) ) )
 import Data.Maybe           ( fromMaybe )
 import Data.String          ( IsString )
 import Text.Read            ( read )
-import Text.Show            ( Show )
-
--- base-unicode-symbols ----------------
-
-import Data.Eq.Unicode          ( (≡) )
-import Data.Function.Unicode    ( (∘) )
-import Data.Monoid.Unicode      ( (⊕) )
-import Prelude.Unicode          ( ℤ )
-import Numeric.Natural.Unicode  ( ℕ )
-
--- hashable ----------------------------
-
-import Data.Hashable  ( Hashable )
-
--- lens --------------------------------
-
-import Control.Lens.Review  ( (#) )
-
--- mtl ---------------------------------
-
-import Control.Monad.Except  ( MonadError, throwError )
-
--- more-unicode ------------------------
-
-import Data.MoreUnicode.Applicative  ( (∤), (⊵), (⋫), (⋪) )
-import Data.MoreUnicode.Char         ( ℂ )
-import Data.MoreUnicode.Either       ( pattern 𝕷, pattern 𝕽 )
-import Data.MoreUnicode.Functor      ( (⊳) )
-import Data.MoreUnicode.Maybe        ( pattern 𝕵, pattern 𝕹 )
-import Data.MoreUnicode.Monoid       ( ю )
-import Data.MoreUnicode.String       ( 𝕊 )
-import Data.MoreUnicode.Text         ( 𝕋 )
 
 -- parsec ------------------------------
 
@@ -76,11 +41,8 @@ import Language.Haskell.TH.Syntax  ( Lift )
 
 -- text --------------------------------
 
-import Data.Text  ( last, length, map, pack, replicate, singleton, toTitle,zip )
-
--- tfmt --------------------------------
-
-import Text.Fmt  ( fmt )
+import qualified  Data.Text  as  Text
+import Data.Text  ( length, map, pack, replicate, singleton, toTitle,zip )
 
 -- unordered-containers ----------------
 
@@ -146,15 +108,15 @@ newtype ReplFnName = ReplFnName 𝕋
 
 ------------------------------------------------------------
 
-{- | Transliterate a `Text`.  Replace some set of characters with another
-     set of characters in a `Text`.  Takes precisely two `Text` args, being the
+{- | Transliterate a `𝕋`.  Replace some set of characters with another
+     set of characters in a `𝕋`.  Takes precisely two `𝕋` args, being the
      "from" list and the "to" list.  Each character in the "from" list, when
      seen in the input string, is replaced with the corresponding character in
      the "to" list (by position).  If the "from" list is longer than the "to"
      list, then the last character of the "to" is used.
 
-     If characters in the "from" list are repeated; then which one is 'chosen'
-     is undefined.
+     If characters in the "from" list are repeated; then which one is chosen is
+     undefined.
 
      It is an error to pass an empty "to" list.
  -}
@@ -166,14 +128,14 @@ tr x [ReplArgT from, ReplArgT to] =
   let ttable ∷ HashMap ℂ ℂ
       ttable =
         let len = length from - length to
-            lst = singleton $ last to
+            lst = singleton $ Text.last to
          in HashMap.fromList $ zip from (to ⊕ replicate len lst)
    in return $ map (\ c → fromMaybe c (ttable !? c)) x
 tr _ args = throwAsREFnError $ [fmt|Bad args to tr: '%w'|] args
 
 ----------------------------------------
 
-{- | Title-case a `Text`; that is, ensure that every word begins with an
+{- | Title-case a `𝕋`; that is, ensure that every word begins with an
      upper-case letter.  Takes no args.  -}
 
 title ∷ (AsREFnError ε, MonadError ε η) ⇒ 𝕋 → [ReplArg] → η 𝕋
@@ -188,7 +150,7 @@ replFns = HashMap.fromList [ ("title", title), ("tr", tr)  ]
 
 ----------------------------------------
 
-{-| Apply a replacement function to some `Text`. -}
+{-| Apply a replacement function to some `𝕋`. -}
 applyFn ∷ ∀ ε η . (AsREFnError ε, MonadError ε η) ⇒ 𝕋 → ReplFn → η 𝕋
 applyFn t (ReplFn fnname fnargs) = do
   case replFns !? ReplFnName fnname of

@@ -7,7 +7,7 @@ module PCRE.GroupID
   )
 where
 
-import Prelude  ( fromIntegral )
+import Base1T
 
 -- array -------------------------------
 
@@ -15,36 +15,8 @@ import Data.Array  ( assocs )
 
 -- base --------------------------------
 
-import Control.Applicative  ( many )
-import Control.Monad        ( join, return )
-import Data.Eq              ( Eq )
-import Data.Function        ( ($), const, id )
-import Data.List            ( lookup )
-import GHC.Stack            ( HasCallStack )
-import System.Exit          ( ExitCode )
-import System.IO            ( IO )
-import Text.Read            ( read )
-import Text.Show            ( Show( show ) )
-
--- base-unicode-symbols ----------------
-
-import Data.Function.Unicode    ( (∘) )
-import Data.Monoid.Unicode      ( (⊕) )
-import Numeric.Natural.Unicode  ( ℕ )
-
--- mtl ---------------------------------
-
-import Control.Monad.Except  ( MonadError )
-
--- more-unicode ------------------------
-
-import Data.MoreUnicode.Applicative  ( (∤), (⊵) )
-import Data.MoreUnicode.Either       ( 𝔼, pattern 𝕷, pattern 𝕽 )
-import Data.MoreUnicode.Functor      ( (⊳) )
-import Data.MoreUnicode.Maybe        ( pattern 𝕵, pattern 𝕹 )
-import Data.MoreUnicode.Monad        ( (≫) )
-import Data.MoreUnicode.String       ( 𝕊 )
-import Data.MoreUnicode.Text         ( 𝕋 )
+import Data.List  ( lookup )
+import Text.Read  ( read )
 
 -- parsec-plus -------------------------
 
@@ -72,19 +44,6 @@ import Text.RE.Replace  ( Capture( Capture, capturedText )
 
 import Text.RE.PCRE.Text  ( RE, (?=~), reSource )
 
--- tasty -------------------------------
-
-import Test.Tasty  ( TestTree, testGroup )
-
--- tasty-hunit -------------------------
-
-import Test.Tasty.HUnit  ( (@=?), testCase )
-
--- tasty-plus --------------------------
-
-import TastyPlus  ( assertIsLeft, assertRight, assertSuccess
-                  , runTestsP, runTestsReplay, runTestTree )
-
 -- template-haskell --------------------
 
 import Language.Haskell.TH         ( Name, Q )
@@ -94,10 +53,6 @@ import Language.Haskell.TH.Syntax  ( Exp( AppE, ConE ), Lift( liftTyped )
 -- text --------------------------------
 
 import Data.Text  ( pack, unpack )
-
--- tfmt --------------------------------
-
-import Text.Fmt  ( fmt )
 
 ------------------------------------------------------------
 --                     local imports                      --

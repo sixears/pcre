@@ -7,36 +7,7 @@ module PCRE.ReplText
   ( ReplText(..), ReplTextFrag(..), repltext, tests )
 where
 
--- base --------------------------------
-
-import Control.Applicative  ( many, some )
-import Control.Monad        ( return )
-import Data.Eq              ( Eq( (==) ) )
-import Data.Function        ( ($) )
-import Data.List.NonEmpty   ( NonEmpty( (:|) ) )
-import System.Exit          ( ExitCode )
-import System.IO            ( IO )
-import Text.Show            ( Show )
-
--- base-unicode-symbols ----------------
-
-import Data.Eq.Unicode          ( (≡) )
-import Data.Function.Unicode    ( (∘) )
-import Numeric.Natural.Unicode  ( ℕ )
-
--- data-textual ------------------------
-
-import Data.Textual  ( Printable( print ), toText )
-
--- more-unicode ------------------------
-
-import Data.MoreUnicode.Applicative  ( (⋪) )
-import Data.MoreUnicode.Either       ( 𝔼 )
-import Data.MoreUnicode.Functor      ( (⊳) )
-import Data.MoreUnicode.Monad        ( (≫) )
-import Data.MoreUnicode.Monoid       ( ю )
-import Data.MoreUnicode.String       ( 𝕊 )
-import Data.MoreUnicode.Text         ( 𝕋 )
+import Base1T
 
 -- parsec-plus -------------------------
 
@@ -55,19 +26,6 @@ import ParserPlus  ( parseBackslashedChar, tries )
 -- quasiquoting ------------------------
 
 import QuasiQuoting  ( QuasiQuoter, liftParsec, mkQQExp )
-
--- tasty -------------------------------
-
-import Test.Tasty  ( TestTree, testGroup )
-
--- tasty-hunit -------------------------
-
-import Test.Tasty.HUnit  ( (@=?), testCase )
-
--- tasty-plus --------------------------
-
-import TastyPlus  ( assertIsLeft, assertRight
-                  , runTestsP, runTestsReplay, runTestTree )
 
 -- template-haskell --------------------
 
@@ -100,6 +58,8 @@ liftTExp y x = ⟦ x ⟧ ≫ return ∘ TExp ∘ AppE (ConE y)
 
 ------------------------------------------------------------
 
+{-| a single piece of a regular expression replacement template; either some
+    static text, or a group-based expression -}
 data ReplTextFrag = RTFText 𝕋 | RTFExpr ReplExpr
   deriving (Eq,Show)
 
@@ -147,6 +107,7 @@ parseReplTextFragTests =
 
 ----------------------------------------
 
+{- | regular expression replacement text template -}
 newtype ReplText = ReplText [ReplTextFrag]
   deriving Show
 
@@ -161,6 +122,7 @@ instance Lift ReplText where
     fs ← ⟦ frags ⟧
     return ∘ TExp $ AppE (ConE 'ReplText) fs
 
+{- | quasi-quoting constructor for `ReplText` -}
 repltext ∷ QuasiQuoter
 repltext = mkQQExp "ReplText" (liftParsec (\ s → parsec @ReplText s s))
 
@@ -215,6 +177,7 @@ parseReplTextTests =
 
 ------------------------------------ tests -------------------------------------
 
+{-| unit tests -}
 tests ∷ TestTree
 tests = testGroup "ReplText" [ parseReplTextFragTests, parseReplTextTests ]
 

@@ -1,7 +1,5 @@
 {- | PCRE Wrapper & replacement utilities. -}
 
--- XXX get rid of ReplFns, it's fully internal, just use [ReplFn]
-
 module PCRE
   ( REPlacement
   , (≃), (=~)
@@ -12,48 +10,13 @@ module PCRE
   )
 where
 
+import Base1T
+
 -- base --------------------------------
 
-import Control.Applicative  ( many )
-import Control.Monad        ( foldM, return, sequence )
-import Data.Bifunctor       ( first )
-import Data.Eq              ( Eq( (==) ) )
-import Data.Function        ( ($) )
 import Data.List            ( reverse )
-import Data.List.NonEmpty   ( NonEmpty( (:|) ), nonEmpty )
-import Data.Maybe           ( fromMaybe, maybe )
-import System.Exit          ( ExitCode )
-import System.IO            ( IO )
-import Text.Show            ( Show( show ) )
-
--- base-unicode-symbols ----------------
-
-import Data.Bool.Unicode        ( (∧) )
-import Data.Eq.Unicode          ( (≡) )
-import Data.Function.Unicode    ( (∘) )
-import Data.Monoid.Unicode      ( (⊕) )
-import Prelude.Unicode          ( ℤ )
-import Numeric.Natural.Unicode  ( ℕ )
-
--- data-textual ------------------------
-
-import Data.Textual  ( toText )
-
--- mtl ---------------------------------
-
-import Control.Monad.Except  ( MonadError )
-
--- more-unicode ------------------------
-
-import Data.MoreUnicode.Applicative  ( (⊵), (⋪) )
-import Data.MoreUnicode.Either       ( 𝔼, pattern 𝕽 )
-import Data.MoreUnicode.Functor      ( (⊳), (⊳⊳) )
-import Data.MoreUnicode.Lens         ( (⊣) )
-import Data.MoreUnicode.Maybe        ( 𝕄, pattern 𝕵, pattern 𝕹 )
-import Data.MoreUnicode.Monad        ( (≫) )
-import Data.MoreUnicode.Monoid       ( ю )
-import Data.MoreUnicode.String       ( 𝕊 )
-import Data.MoreUnicode.Text         ( 𝕋 )
+import Data.List.NonEmpty   ( nonEmpty )
+import Data.Maybe           ( fromMaybe )
 
 -- parsec-plus -------------------------
 
@@ -72,44 +35,18 @@ import ParserPlus  ( stringMaybeDQuoted )
 
 import Text.RE.PCRE.Text  ( RE, re, reSource )
 
--- tasty -------------------------------
-
-import Test.Tasty  ( TestName, TestTree, testGroup )
-
--- tasty-hunit -------------------------
-
-import Test.Tasty.HUnit  ( (@=?), testCase )
-
--- tasty-plus --------------------------
-
-import TastyPlus  ( runTestsP, runTestsReplay, runTestTree )
-
--- tfmt --------------------------------
-
-import Text.Fmt  ( fmt )
-
 ------------------------------------------------------------
 --                     local imports                      --
 ------------------------------------------------------------
 
 import PCRE.Error     ( AsREFnError, AsREGroupError, REFnGroupError )
 import PCRE.Base      ( compRE, unREParsecable )
-import PCRE.GroupID   ( Groupable, GroupID( GIDName, GIDNum ), group )
-import PCRE.ReplFn    ( applyFn)
-import PCRE.ReplExpr  ( ReplExpr( ReplExpr ) )
+import PCRE.GroupID   ( GroupID( GIDName, GIDNum ) )
+import PCRE.ReplExpr  ( ReplExpr( ReplExpr ), applyExpr )
 import PCRE.ReplText  ( ReplText( ReplText ), ReplTextFrag( RTFExpr, RTFText ) )
 import PCRE.REMatch   ( (=~), (≃), reMatch, sourcePost, sourcePre )
 
 --------------------------------------------------------------------------------
-
-{- | Apply a replacement expression to a group. -}
-applyExpr ∷ ∀ ε γ η .
-            (Groupable γ, AsREGroupError ε, AsREFnError ε, MonadError ε η) ⇒
-           ReplExpr → RE → γ → η 𝕋
-applyExpr (ReplExpr fns gid) r m =
-  group r gid m ≫ \ t → foldM applyFn t fns
-
-------------------------------------------------------------
 
 {- | An RE with its replacement pattern. -}
 data REPlacement = REPlacement RE ReplText
@@ -291,6 +228,7 @@ rep3_3 = REPlacement re3 repl3
 
 ----------------------------------------
 
+{-| unit tests -}
 tests ∷ TestTree
 tests = testGroup "parseReplacementText" [ replaceTests
                                          , replace1Tests

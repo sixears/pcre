@@ -1,39 +1,14 @@
 {- | A group (backreference) identifier, along with a (possibly empty) list of
      replacement functions, which may be applied to an RE match to produce some
-     `Text` (typically to insert at the location where the backreference was
+     `𝕋` (typically to insert at the location where the backreference was
      made).
  -}
 
 module PCRE.ReplExpr
-  ( ReplExpr(..), tests )
+  ( ReplExpr(..), applyExpr, tests )
 where
 
--- base --------------------------------
-
-import Control.Applicative  ( many )
-import Control.Monad        ( return )
-import Data.Eq              ( Eq )
-import Data.Function        ( ($) )
-import System.Exit          ( ExitCode )
-import System.IO            ( IO )
-import Text.Show            ( Show( show ) )
-
--- base-unicode-symbols ----------------
-
-import Data.Function.Unicode    ( (∘) )
-import Numeric.Natural.Unicode  ( ℕ )
-
--- data-textual ------------------------
-
-import Data.Textual  ( Printable( print ) )
-
--- more-unicode ------------------------
-
-import Data.MoreUnicode.Applicative  ( (⊵), (⋫), (⋪) )
-import Data.MoreUnicode.Either       ( 𝔼 )
-import Data.MoreUnicode.Functor      ( (⊳) )
-import Data.MoreUnicode.Monoid       ( ю )
-import Data.MoreUnicode.String       ( 𝕊 )
+import Base1T
 
 -- parsec-plus -------------------------
 
@@ -44,18 +19,9 @@ import ParsecPlus    ( Parsecable( parser, parsec ) )
 
 import Text.Parser.Char  ( char, spaces, string )
 
--- tasty -------------------------------
+-- regex-with-pcre ---------------------
 
-import Test.Tasty  ( TestTree, testGroup )
-
--- tasty-hunit -------------------------
-
-import Test.Tasty.HUnit  ( (@=?), testCase )
-
--- tasty-plus --------------------------
-
-import TastyPlus  ( assertIsLeft, assertRight
-                  , runTestsP, runTestsReplay, runTestTree )
+import Text.RE.PCRE.Text  ( RE )
 
 -- template-haskell --------------------
 
@@ -70,14 +36,15 @@ import qualified Text.Printer  as  P
 --                     local imports                      --
 ------------------------------------------------------------
 
-import PCRE.GroupID  ( GroupID( GIDName, GIDNum ) )
+import PCRE.Error    ( AsREFnError, AsREGroupError )
+import PCRE.GroupID  ( Groupable, GroupID( GIDName, GIDNum ), group )
 import PCRE.ReplFn   ( ReplArg( ReplArgF, ReplArgN, ReplArgT, ReplArgZ )
-                     , ReplFn( ReplFn ) )
+                     , ReplFn( ReplFn ), applyFn )
 
 --------------------------------------------------------------------------------
 
 {- | A sequence of replacement functions, along with a group (backreference)
-     identifier, which may be applied to an RE match to produce some `Text`
+     identifier, which may be applied to an RE match to produce some `𝕋`
      (typically to insert at the location where the backreference was made).
  -}
 
@@ -154,6 +121,15 @@ parseReplExprTests =
     , checkFail "${ .x y .z}"
     , checkFail "${1foo}"
     ]
+
+----------------------------------------
+
+{- | Apply a replacement expression to a group. -}
+applyExpr ∷ ∀ ε γ η .
+            (Groupable γ, AsREGroupError ε, AsREFnError ε, MonadError ε η) ⇒
+           ReplExpr → RE → γ → η 𝕋
+applyExpr (ReplExpr fns gid) r m =
+  group r gid m ≫ \ t → foldM applyFn t fns
 
 ------------------------------------ tests -------------------------------------
 

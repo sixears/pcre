@@ -7,43 +7,11 @@ module PCRE.Error
   )
 where
 
+import Base1
+
 -- base --------------------------------
 
-import Control.Exception   ( Exception )
 import Control.Monad.Fail  ( MonadFail( fail ) )
-import Data.Eq             ( Eq( (==) ) )
-import Data.Function       ( (&), id )
-import GHC.Stack           ( CallStack, HasCallStack, callStack )
-import Text.Show           ( Show )
-
--- base-unicode-symbols ----------------
-
-import Data.Function.Unicode  ( (∘) )
-
--- data-textual ------------------------
-
-import Data.Textual  ( Printable( print ) )
-
--- has-callstack -----------------------
-
-import HasCallstack  ( HasCallstack( callstack ) )
-
--- lens --------------------------------
-
-import Control.Lens.Lens    ( lens )
-import Control.Lens.Prism   ( Prism', prism' )
-import Control.Lens.Review  ( (#) )
-
--- mtl ---------------------------------
-
-import Control.Monad.Except  ( MonadError, throwError )
-
--- more-unicode ------------------------
-
-import Data.MoreUnicode.Either  ( 𝔼, pattern 𝕷 )
-import Data.MoreUnicode.Lens    ( (⊣), (⊢) )
-import Data.MoreUnicode.Maybe   ( pattern 𝕵, pattern 𝕹 )
-import Data.MoreUnicode.Text    ( 𝕋 )
 
 -- text --------------------------------
 
@@ -95,6 +63,7 @@ instance AsREParseError REParseError where
 
 ------------------------------------------------------------
 
+{- | requested group not found in RE -}
 data REGroupError = REGroupError 𝕋 CallStack
   deriving Show
 
@@ -134,12 +103,14 @@ instance AsREGroupError REGroupError where
 
 ----------------------------------------
 
+{- | throw an error that may be an `REGroupError` -}
 throwAsREGroupError ∷ ∀ ε α η .
                       (AsREGroupError ε, MonadError ε η, HasCallStack) ⇒ 𝕋 → η α
 throwAsREGroupError = throwError ∘ (_REGroupError #)  ∘ reGroupError
 
 ------------------------------------------------------------
 
+{- | either an `REGroupError` or an `REParseError` -}
 data REParseGroupError = REPGE_GroupE REGroupError
                        | REPGE_ParseE REParseError
   deriving (Eq,Show)
@@ -171,6 +142,7 @@ reGroupError t = REGroupError t callStack
 
 ------------------------------------------------------------
 
+{- | either a `REGroupError` or a `REFnError` -}
 data REFnGroupError = REFGE_GroupE REGroupError
                     | REFGE_FnE    REFnError
   deriving (Eq,Show)
@@ -219,6 +191,13 @@ instance AsREFnError REFnGroupError where
 
 ------------------------------------------------------------
 
+{- | error when calling an RE function; typically no such function (by name),
+     else wrong argument count or type -}
+-- really should divvy up into
+--   - no such function
+--   - wrong arg count
+--   - wrong arg types
+--   - right arg types, but illegal values
 data REFnError = REFnError 𝕋 CallStack
   deriving Show
 
@@ -240,11 +219,13 @@ instance Printable REFnError where
 
 ----------------------------------------
 
+{- | make a `REFnError` -}
 reFnError ∷ HasCallStack ⇒ 𝕋 → REFnError
 reFnError t = REFnError t callStack
 
 ----------------------------------------
 
+{- | throw a `REFnError` -}
 throwREFnError ∷ ∀ α η . (MonadError REFnError η, HasCallStack) ⇒
                  𝕋 → η α
 throwREFnError = throwError ∘ reFnError
@@ -261,6 +242,7 @@ instance AsREFnError REFnError where
 
 ----------------------------------------
 
+{- | throw an error that may be an `REFnError` -}
 throwAsREFnError ∷ ∀ ε α η . (AsREFnError ε, MonadError ε η, HasCallStack) ⇒
                    𝕋 → η α
 throwAsREFnError = throwError ∘ (_REFnError #)  ∘ reFnError

@@ -1,27 +1,9 @@
+{-| all unit tests for pcre module -}
 module PCRE.T.Tests
   ( tests )
 where
 
--- base --------------------------------
-
-import System.Exit  ( ExitCode )
-import System.IO    ( IO )
-
--- base-unicode-symbols ----------------
-
-import Numeric.Natural.Unicode  ( ℕ )
-
--- more-unicode ------------------------
-
-import Data.MoreUnicode.String  ( 𝕊 )
-
--- tasty -------------------------------
-
-import Test.Tasty  ( TestTree, testGroup )
-
--- tasty-plus --------------------------
-
-import TastyPlus  ( runTestsP, runTestsReplay, runTestTree )
+import Base1T
 
 ------------------------------------------------------------
 --                     local imports                      --
@@ -35,8 +17,8 @@ import qualified PCRE.ReplText
 
 ------------------------------------ tests -------------------------------------
 
+{-| unit tests -}
 tests ∷ TestTree
-
 tests = testGroup "PCRE" [ PCRE.tests
                          , PCRE.GroupID.tests
                          , PCRE.REMatch.tests
