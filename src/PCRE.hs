@@ -21,50 +21,26 @@ import Data.Maybe           ( fromMaybe )
 -- parsec-plus -------------------------
 
 import Parsec.Error  ( ParseError )
-import ParsecPlus    ( Parsecable( parser, parsec ), eitherParsec )
-
--- parsers -----------------------------
-
-import Text.Parser.Char  ( char )
-
--- parser-plus -------------------------
-
-import ParserPlus  ( stringMaybeDQuoted )
+import ParsecPlus    ( Parsecable( parsec ) )
 
 -- regex-with-pcre ---------------------
 
-import Text.RE.PCRE.Text  ( RE, re, reSource )
+import Text.RE.PCRE.Text  ( RE, re )
 
 ------------------------------------------------------------
 --                     local imports                      --
 ------------------------------------------------------------
 
-import PCRE.Error     ( AsREFnError, AsREGroupError, REFnGroupError )
-import PCRE.Base      ( compRE, unREParsecable )
-import PCRE.GroupID   ( GroupID( GIDName, GIDNum ) )
-import PCRE.ReplExpr  ( ReplExpr( ReplExpr ), applyExpr )
-import PCRE.ReplText  ( ReplText( ReplText ), ReplTextFrag( RTFExpr, RTFText ) )
-import PCRE.REMatch   ( (=~), (≃), reMatch, sourcePost, sourcePre )
+import PCRE.Error        ( AsREFnError, AsREGroupError, REFnGroupError )
+import PCRE.Base         ( compRE )
+import PCRE.GroupID      ( GroupID( GIDName, GIDNum ) )
+import PCRE.ReplExpr     ( ReplExpr( ReplExpr ), applyExpr )
+import PCRE.ReplText     ( ReplText( ReplText )
+                         , ReplTextFrag( RTFExpr, RTFText ) )
+import PCRE.REMatch      ( (=~), (≃), reMatch, sourcePost, sourcePre )
+import PCRE.REPlacement  ( REPlacement( REPlacement ) )
 
 --------------------------------------------------------------------------------
-
-{- | An RE with its replacement pattern. -}
-data REPlacement = REPlacement RE ReplText
-
-instance Eq REPlacement where
-  (REPlacement r rtext) == (REPlacement r' rtext') =
-    (reSource r ≡ reSource r') ∧ (rtext ≡ rtext')
-
-instance Show REPlacement where
-  show (REPlacement r rtext) =
-    [fmt|REPlacement: »%s« → »%t«|] (reSource r) (toText rtext)
-
-instance Parsecable REPlacement where
-  parser = REPlacement ⊳ (unREParsecable ⊳ parser) ⋪ many (char '\t')
-                       ⊵ (eitherParsec stringMaybeDQuoted
-                                       (\ s → parsec @_ @ParseError s s))
-
-------------------------------------------------------------
 
 {- | Make a regex replacement; if the regex does not match, return Nothing. -}
 replace ∷ ∀ ε η . (AsREFnError ε, AsREGroupError ε, MonadError ε η) ⇒
