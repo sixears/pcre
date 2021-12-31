@@ -6,6 +6,10 @@ where
 
 import Base1
 
+-- hashable ----------------------------
+
+import Data.Hashable  ( Hashable( hashWithSalt ) )
+
 -- parsec-plus -------------------------
 
 import Parsec.Error  ( ParseError )
@@ -42,6 +46,9 @@ instance Eq REPlacement where
 instance Show REPlacement where
   show (REPlacement r rtext) =
     [fmt|REPlacement: »%s« → »%t«|] (reSource r) (toText rtext)
+
+instance Hashable REPlacement where
+  hashWithSalt i r = hashWithSalt i (show r)
 
 instance Parsecable REPlacement where
   parser = REPlacement ⊳ (unREParsecable ⊳ parser) ⋪ many (char '\t')

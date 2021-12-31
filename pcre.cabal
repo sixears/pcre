@@ -10,7 +10,7 @@ name:                pcre
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.0.1.0
+version:             0.0.2.0
 
 -- A short (one-line) description of the package.
 synopsis:            handle PCRE-based REs, including textual replacements
@@ -83,14 +83,15 @@ library
   -- other-extensions:
 
   -- Other library packages from which modules are imported.
-  build-depends:     array, base, parsec, parsers, regex, regex-with-pcre
-                   , template-haskell, text, text-printer, unordered-containers
+  build-depends:     array, base, hashable, parsec, parsers, regex
+                   , regex-with-pcre, template-haskell, text, text-printer
+                   , unordered-containers
 
-                   , base1            >= 0.0.1.0
+                   , base1            >= 0.0.2.0
                    , base1t           >= 0.0.0.0
                    , monaderror-io    >= 1.2.1.0
                    , parsec-plus-base >= 1.0.4.0
-                   , parsec-plus      >= 1.1.0.2
+                   , parsec-plus      >= 1.1.1.0
                    , parser-plus      >= 1.0.7.0
                    , quasiquoting     >= 1.0.1.0
 

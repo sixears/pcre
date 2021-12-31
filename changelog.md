@@ -1,3 +1,7 @@
+0.0.2.0 2021-12-31
+==================
+- add Hashable instance of REPlacement
+
 0.0.1.0 2021-12-23
 ==================
 - split REPlacement into its own file; export REPlacement data c'tor
