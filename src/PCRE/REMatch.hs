@@ -12,13 +12,18 @@ where
 
 import Base1T
 
+-- base --------------------------------
+
+import Data.List  ( sortBy, zip )
+import Data.Ord   ( compare )
+
 -- regex -------------------------------
 
 import Text.RE.Replace  ( Capture( captureLength, captureOffset
                                  , captureSource, capturedText )
                         , CaptureID( IsCaptureOrdinal )
                         , CaptureName( getCaptureName )
-                        , Match
+                        , CaptureOrdinal( CaptureOrdinal), Match
                         , (!$$)
                         , captureNames, matchCaptures
                         )
@@ -71,11 +76,16 @@ instance Groupable (REMatch 𝕋) where
 
 groupTests ∷ TestTree
 groupTests =
-  let r1 = compRE @REParseError @(𝔼 _) "${iggy}(fo+)${pop}(.ar)"
+  let compre = compRE @REParseError @(𝔼 _)
+      r1 = compre "${iggy}(fo+)${pop}(.ar)"
       reM1 = REMatch "foobar" ["foo","bar"]
                      (HashMap.fromList [("iggy","foo"),("pop","bar")]) "" ""
+      r2 = compre "^${a}(.*/)?(?=[^/]+$)${b}(.*)(?:-)${c}(.*)$"
+      reM2 = REMatch "/foo/bar/xx-yy" ["/foo/bar/","xx","yy"]
+                     (HashMap.fromList [("a","/foo/bar/"),("b","xx"),("c","yy")]) "" ""
    in testGroup "group"
-    [ testCase "=~" $ assertRight (@=? 𝕵 reM1) $ (=~ "foobar") ⊳ r1
+    [ testCase "=~ r1" $ assertRight (@=? 𝕵 reM1) $ (=~ "foobar") ⊳ r1
+    , testCase "=~ r2" $ assertRight (@=? 𝕵 reM2) $ (=~ "/foo/bar/xx-yy") ⊳ r2
     ]
 
 ----------------------------------------
@@ -108,6 +118,20 @@ instance HasIndex (REMatch α) where
   index (GIDNum  0) m = 𝕵 $ m ⊣ sourceText
   index (GIDNum  i) m = (m ⊣ sourceGroups) !! (i -1)
 
+{- `captureNames`, when enacted on a PCRE match, on something like
+   `^${a}(.*/)?(?=[^/]+$)${b}(.*)(?:-)${c}(.*)$`
+   returns something like `a ⇒ 1, b ⇒ 3, c ⇒ 4`; that is, the zero-width group
+   is counted in the ordinals.  However, !$$ doesn't include those non-matching
+   groups when counting ordinals; it expects contiguous numbers.
+-}
+reindexedCaptureNames ∷ Match α → [(CaptureName, CaptureOrdinal)]
+reindexedCaptureNames m =
+  let sortByOrdinal = sortBy (\ (_,x) (_,y) → x `compare` y)
+      capNamesList n = HashMap.toList $ captureNames n
+      ord j          = CaptureOrdinal $ fromIntegral j
+   in [ (n,ord i) | (i,(n,_)) ← zip [(1∷ℕ)..] $ sortByOrdinal $ capNamesList m ]
+
+
 {-| convert a `Match 𝕋` to a `𝕄 (REMatch 𝕋)` (in particular, creating a
     `HashMap` of named groups) -}
 reMatch ∷ Match 𝕋 → 𝕄 (REMatch 𝕋)
@@ -117,9 +141,19 @@ reMatch m = matchCaptures m ⊲
          cs       = foldMapWithKey
                       (\ nm i → HashMap.singleton (getCaptureName nm)
                                                   (m !$$! i))
-                      (captureNames m)
-         pre = take (captureOffset cap) (captureSource cap)
-         post = drop (captureLength cap + captureOffset cap) (captureSource cap)
+                      -- captureNames returns something like
+                      -- a ⇒ 1, b ⇒ 3, c ⇒ 4
+                      -- for ^${a}(.*/)?(?=[^/]+$)${b}(.*)(?:-)${c}(.*)$
+                      -- that is, the non-matching group is counted in the
+                      -- ordinals; but !$$ doesn't include those non-matching
+                      -- groups when counting ordinals :-(
+                      -- this may be a conflict between regex (which includes
+                      -- Posix REs) and PCRE
+                      -- (captureNames m)
+                      (fromList $ reindexedCaptureNames m)
+         pre      = take (captureOffset cap) (captureSource cap)
+         post     = drop (captureLength cap + captureOffset cap)
+                         (captureSource cap)
       in REMatch (capturedText cap) (capturedText ⊳ caps) cs pre post
 
 

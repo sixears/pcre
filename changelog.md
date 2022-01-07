@@ -1,3 +1,7 @@
+0.0.2.1 2022-01-07
+==================
+- fix bug with capture groups in REMatch in the presence of zero-width assertions
+
 0.0.2.0 2021-12-31
 ==================
 - add Hashable instance of REPlacement
