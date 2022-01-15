@@ -44,6 +44,10 @@ import Language.Haskell.TH.Syntax  ( Lift )
 import qualified  Data.Text  as  Text
 import Data.Text  ( length, map, pack, replicate, singleton, toTitle,zip )
 
+-- text-printer ------------------------
+
+import qualified Text.Printer  as  P
+
 -- unordered-containers ----------------
 
 import qualified Data.HashMap.Lazy  as  HashMap
@@ -61,7 +65,15 @@ import PCRE.Error  ( AsREFnError( _REFnError ), REFnError, throwAsREFnError )
 data ReplArg = ReplArgT 𝕋 | ReplArgN ℕ | ReplArgZ ℤ | ReplArgF Float
   deriving (Eq,Lift,Show)
 
-----------
+--------------------
+
+instance Printable ReplArg where
+  print (ReplArgT t) = P.string $ show t
+  print (ReplArgN n) = P.string $ show n
+  print (ReplArgZ z) = P.text $ [fmt|%s%d|] (if z < 0 then "-" else "+") (abs z)
+  print (ReplArgF f) = P.text $ [fmt|%.01f|] f
+
+--------------------
 
 instance Parsecable ReplArg where
   parser =
@@ -90,7 +102,11 @@ instance Parsecable ReplArg where
 data ReplFn = ReplFn 𝕋 [ReplArg]
   deriving (Eq,Lift,Show)
 
-----------
+--------------------
+
+instance Printable ReplFn where
+  print (ReplFn n as) =
+    P.text $ if as ≡ [] then "." ⊕ n else [fmt|.%t(%L)|] n as
 
 instance Parsecable ReplFn where
   parser =

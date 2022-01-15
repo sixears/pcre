@@ -1,9 +1,9 @@
 {- | PCRE Error Types -}
 
 module PCRE.Error
-  ( AsREFnError(..), AsREGroupError(..), AsREParseError(..)
+  ( AsREFnError(..), AsREGroupError(..), AsREParseError(..), PCREError
   , REFnError, REFnGroupError, REGroupError, REParseError, REParseGroupError
-  , throwAsREFnError, throwAsREGroupError, throwREFnError
+  , throwAsREFnError, throwAsREGroupError, throwAsREParseError, throwREFnError
   )
 where
 
@@ -12,6 +12,10 @@ import Base1
 -- base --------------------------------
 
 import Control.Monad.Fail  ( MonadFail( fail ) )
+
+-- stdmain -----------------------------
+
+import StdMain.UsageError  ( AsUsageError( _UsageError ), UsageIOError )
 
 -- text --------------------------------
 
@@ -27,6 +31,10 @@ import qualified Text.Printer  as  P
 
 data REParseError = REParseError 𝕋 CallStack
   deriving Show
+
+--------------------
+
+instance Exception REParseError
 
 --------------------
 
@@ -60,6 +68,12 @@ class AsREParseError ε where
 
 instance AsREParseError REParseError where
   _REParseError = id
+
+----------------------------------------
+
+{-| throw an `AsREParseError` -}
+throwAsREParseError ∷ (AsREParseError ε, MonadError ε η, HasCallStack) ⇒ 𝕋 → η α
+throwAsREParseError t = throwError $ _REParseError # REParseError t callStack
 
 ------------------------------------------------------------
 
@@ -245,6 +259,66 @@ instance AsREFnError REFnError where
 {- | throw an error that may be an `REFnError` -}
 throwAsREFnError ∷ ∀ ε α η . (AsREFnError ε, MonadError ε η, HasCallStack) ⇒
                    𝕋 → η α
-throwAsREFnError = throwError ∘ (_REFnError #)  ∘ reFnError
+throwAsREFnError = throwError ∘ (_REFnError #) ∘ reFnError
+
+------------------------------------------------------------
+
+{-| An error for the `pcre` executable, encompassing `UsageIOError` and
+   `REFnGroupError` -}
+data PCREError = PCRE_U_ERROR UsageIOError
+               | PCRE_REFNG_ERROR  REFnGroupError
+
+_PCRE_U_ERROR ∷ Prism' PCREError UsageIOError
+_PCRE_U_ERROR = prism' (\ e → PCRE_U_ERROR e)
+                          (\ case PCRE_U_ERROR e → 𝕵 e; _ → 𝕹)
+
+_PCRE_REFNG_ERROR ∷ Prism' PCREError REFnGroupError
+_PCRE_REFNG_ERROR = prism' (\ e → PCRE_REFNG_ERROR e)
+                         (\ case PCRE_REFNG_ERROR e → 𝕵 e; _ → 𝕹)
+
+
+----------------------------------------
+
+instance Exception PCREError
+
+--------------------
+
+instance Show PCREError where
+  show (PCRE_U_ERROR e) = show e
+  show (PCRE_REFNG_ERROR  e) = show e
+
+--------------------
+
+instance Printable PCREError where
+  print (PCRE_U_ERROR e) = print e
+  print (PCRE_REFNG_ERROR  e) = print e
+
+--------------------
+
+instance HasCallstack PCREError where
+  callstack =
+    let
+      getter (PCRE_U_ERROR e) = e ⊣ callstack
+      getter (PCRE_REFNG_ERROR  e) = e ⊣ callstack
+      setter (PCRE_U_ERROR e) cs =
+        PCRE_U_ERROR (e & callstack ⊢ cs)
+      setter (PCRE_REFNG_ERROR  e) cs =
+        PCRE_REFNG_ERROR (e & callstack ⊢ cs)
+    in
+      lens getter setter
+
+----------------------------------------
+
+instance AsREGroupError PCREError where
+  _REGroupError = _PCRE_REFNG_ERROR ∘ _REGroupError
+
+instance AsREFnError PCREError where
+  _REFnError = _PCRE_REFNG_ERROR ∘ _REFnError
+
+instance AsIOError PCREError where
+  _IOError = _PCRE_U_ERROR ∘ _IOError
+
+instance AsUsageError PCREError where
+  _UsageError  = _PCRE_U_ERROR ∘ _UsageError
 
 -- that's all, folks! ----------------------------------------------------------

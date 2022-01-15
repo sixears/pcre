@@ -1,3 +1,8 @@
+0.0.3.0 2022-01-15
+==================
+- add pcre executable
+- add Printable instance of ReplText
+
 0.0.2.1 2022-01-07
 ==================
 - fix bug with capture groups in REMatch in the presence of zero-width assertions

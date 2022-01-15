@@ -54,6 +54,10 @@ import Language.Haskell.TH.Syntax  ( Exp( AppE, ConE ), Lift( liftTyped )
 
 import Data.Text  ( pack, unpack )
 
+-- text-printer ------------------------
+
+import qualified Text.Printer  as  P
+
 ------------------------------------------------------------
 --                     local imports                      --
 ------------------------------------------------------------
@@ -66,9 +70,19 @@ import PCRE.Error    ( AsREGroupError, REParseGroupError, throwAsREGroupError )
 data GroupID = GIDName 𝕋 | GIDNum ℕ
   deriving (Eq,Show)
 
+--------------------
+
+instance Printable GroupID where
+  print (GIDNum  n) = P.text $ [fmt|%d|] n
+  print (GIDName n) = P.text $ [fmt|%t|] n
+
+--------------------
+
 instance Lift GroupID where
   liftTyped (GIDName t) = liftTExp 'GIDName t
   liftTyped (GIDNum  n) = liftTExp 'GIDNum  n
+
+--------------------
 
 instance Parsecable GroupID where
   parser =
@@ -78,6 +92,8 @@ instance Parsecable GroupID where
         identifier = pack ⊳ ((:) ⊳ letter ⊵ many alphaNum)
       in (GIDName ⊳ identifier) ∤ (GIDNum ⊳ natural)
 
+--------------------
+
 capID ∷ GroupID → CaptureID
 capID (GIDNum  i) = IsCaptureOrdinal ∘ CaptureOrdinal $ fromIntegral i
 capID (GIDName t) = IsCaptureName $ CaptureName t
@@ -86,17 +102,27 @@ groupNm ∷ GroupID → 𝕋
 groupNm (GIDName t) = [fmt|'%t'|] t
 groupNm (GIDNum  i) = [fmt|%d|]   i
 
+----------------------------------------
+
 class ToGroupID α where
   toGroupID ∷ α → GroupID
+
+--------------------
 
 instance ToGroupID GroupID where
   toGroupID = id
 
+--------------------
+
 instance ToGroupID ℕ where
   toGroupID = GIDNum
 
+--------------------
+
 instance ToGroupID 𝕋 where
   toGroupID = GIDName
+
+--------------------
 
 instance ToGroupID CaptureID where
   toGroupID (IsCaptureName    (CaptureName    t)) = GIDName t

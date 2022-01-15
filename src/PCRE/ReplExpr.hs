@@ -28,6 +28,10 @@ import Text.RE.PCRE.Text  ( RE )
 import Language.Haskell.TH.Syntax  ( Exp( AppE, ConE ), Lift( liftTyped )
                                    , TExp( TExp ) )
 
+-- text --------------------------------
+
+import Data.Text  ( concat )
+
 -- text-printer ------------------------
 
 import qualified Text.Printer  as  P
@@ -54,7 +58,8 @@ data ReplExpr = ReplExpr [ReplFn] GroupID
 --------------------
 
 instance Printable ReplExpr where
-  print (ReplExpr fns gid) = P.string $ show (fns,gid)
+  print (ReplExpr fns gid) = -- P.string $ show (fns,gid)
+    P.text $ [fmt|${%t%T}|] (concat [[fmt|%T |] fn | fn ← fns]) gid
 
 --------------------
 

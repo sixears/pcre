@@ -14,8 +14,11 @@ import Base1T
 
 -- base --------------------------------
 
-import Data.List  ( sortBy, zip )
-import Data.Ord   ( compare )
+import Data.List  ( sortOn, zip )
+
+-- lens --------------------------------
+
+import Control.Lens.Getter  ( view )
 
 -- regex -------------------------------
 
@@ -34,7 +37,11 @@ import Text.RE.PCRE.Text  ( RE, (?=~), reSource )
 
 -- text --------------------------------
 
-import Data.Text  ( drop, take )
+import Data.Text  ( drop, take, unlines )
+
+-- text-printer ------------------------
+
+import qualified  Text.Printer  as  P
 
 -- unordered-containers ----------------
 
@@ -72,7 +79,20 @@ instance Groupable (REMatch 𝕋) where
               [fmt|group not found: %t in match of '%t' against re '%s'|]
                 (groupNm gid) (match ⊣ sourceText) (reSource r)
 
-----------
+--------------------
+
+instance Show α ⇒ Printable (REMatch α) where
+  print r =
+    let sortedCaptures =  sortOn fst ∘ HashMap.toList ∘ view sourceCaptures
+     in P.text ∘ unlines $ ю
+      [ [ [fmt|%-12t: %w|] "pre"   (r ⊣ sourcePre)  ]
+      , [ [fmt|%-12t: %w|] "match" (r ⊣ sourceText) ]
+      , [ [fmt|%-12t: %w|] "post"  (r ⊣ sourcePost) ]
+      , [ [fmt|%02d%10s: %w|] i " " a | (i,a) ← zip [(0∷ℕ)..] (r⊣sourceGroups) ]
+      , [ [fmt|%-12t: %w|] n t | (n,t) ← sortedCaptures r ]
+      ]
+
+--------------------
 
 groupTests ∷ TestTree
 groupTests =
@@ -126,10 +146,10 @@ instance HasIndex (REMatch α) where
 -}
 reindexedCaptureNames ∷ Match α → [(CaptureName, CaptureOrdinal)]
 reindexedCaptureNames m =
-  let sortByOrdinal = sortBy (\ (_,x) (_,y) → x `compare` y)
+  let -- sortByOrdinal = sortBy (\ (_,x) (_,y) → x `compare` y)
       capNamesList n = HashMap.toList $ captureNames n
       ord j          = CaptureOrdinal $ fromIntegral j
-   in [ (n,ord i) | (i,(n,_)) ← zip [(1∷ℕ)..] $ sortByOrdinal $ capNamesList m ]
+   in [ (n,ord i) | (i,(n,_)) ← zip [(1∷ℕ)..] $ sortOn snd $ capNamesList m ]
 
 
 {-| convert a `Match 𝕋` to a `𝕄 (REMatch 𝕋)` (in particular, creating a
@@ -185,3 +205,5 @@ _testr ∷ 𝕊 → ℕ → IO ExitCode
 _testr = runTestsReplay tests
 
 -- that's all, folks! ----------------------------------------------------------
+-- PSA	^${path}(.*/)?(?=[^/]+$)${series}(.*?)\.(?:\.202\d\.)?S${s}(\d{2})E${e}(\d{2})(?:\.${name}(.*?))?(?:\.(?:216|108)0p\..*)\.${ext}(mp4|mkv)	"${path}${series} - ${s}x${e} - ${.tr(\".\",\" \") name}.${ext}"
+-- rename -f /home/martyn/.rename/tv --dry-run The.Morning.Show.S02E01.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E02.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E03.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E04.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E05.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E06.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E07.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E08.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E09.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E10.1080p.WEBRip.x265-RARBG.mp4 --debug
