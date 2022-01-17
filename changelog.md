@@ -1,3 +1,7 @@
+0.0.4.0 2022-01-17
+==================
+- add Printable instance of REPlacement
+
 0.0.3.0 2022-01-15
 ==================
 - add pcre executable
