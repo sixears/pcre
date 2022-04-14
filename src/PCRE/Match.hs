@@ -4,7 +4,7 @@ module PCRE.Match
   ( fmtMatch )
 where
 
-import Base1
+import Base1T
 
 -- array -------------------------------
 

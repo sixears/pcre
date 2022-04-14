@@ -7,7 +7,7 @@ module PCRE.ReplFn
   ( ReplArg(..), ReplFn(..), applyFn, replFns )
 where
 
-import Base1
+import Base1T
 
 import Prelude  ( Float )
 

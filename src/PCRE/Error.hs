@@ -7,7 +7,7 @@ module PCRE.Error
   )
 where
 
-import Base1
+import Base1T
 
 -- base --------------------------------
 

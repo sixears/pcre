@@ -1,3 +1,8 @@
+0.0.4.1 2022-04-14
+==================
+- upgrade dependencies (particularly stdmain to 1.5.7.0)
+- no longer depend on base1, since we require base1t
+
 0.0.4.0 2022-01-17
 ==================
 - add Printable instance of REPlacement

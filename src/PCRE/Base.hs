@@ -4,7 +4,7 @@ module PCRE.Base
   ( REParsecable(..), compRE )
 where
 
-import Base1
+import Base1T
 
 -- monaderror-io -----------------------
 

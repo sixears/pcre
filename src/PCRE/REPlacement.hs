@@ -4,7 +4,7 @@ module PCRE.REPlacement
   ( REPlacement(..) )
 where
 
-import Base1
+import Base1T
 
 -- hashable ----------------------------
 
