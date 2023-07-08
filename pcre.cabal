@@ -10,7 +10,7 @@ name:                pcre
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.0.4.1
+version:             0.0.4.2
 
 -- A short (one-line) description of the package.
 synopsis:            handle PCRE-based REs, including textual replacements
@@ -94,7 +94,7 @@ library
                    , parsec-plus      >= 1.1.1.4
                    , parser-plus      >= 1.0.7.1
                    , quasiquoting     >= 1.0.1.1
-                   , stdmain          >= 1.5.7.0
+                   , stdmain          >= 1.6.1.1
 
   -- Directories containing source files.
   hs-source-dirs:      src
@@ -121,6 +121,7 @@ executable pcre
   default-extensions: NoImplicitPrelude
                     , OverloadedStrings
                     , QuasiQuotes
+                    , ScopedTypeVariables
                     , TypeApplications
                     , UnicodeSyntax
 

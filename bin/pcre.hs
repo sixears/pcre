@@ -163,7 +163,7 @@ myMain opts = forM_ (opts ⊣ args) (printMatch opts) ⪼ return 0
 {- | Run the program (using `getArgs` to provide arguments) -}
 main ∷ IO ()
 main = do
-  let progDesc = "match arguments against a PCRE"
+  let progDesc ∷ 𝕋 = "match arguments against a PCRE"
   getArgs ≫ (\ as → stdMainNoDR progDesc parseOptions (myMain @PCREError) as)
 
 --------------------------------------------------------------------------------

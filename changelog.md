@@ -1,3 +1,7 @@
+0.0.4.2 2023-07-08
+==================
+- use stdmain-1.6
+
 0.0.4.1 2022-04-14
 ==================
 - upgrade dependencies (particularly stdmain to 1.5.7.0)

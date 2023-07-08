@@ -68,8 +68,7 @@ instance Printable ReplTextFrag where
   print (RTFExpr e) = P.text $ toText e
 
 instance Lift ReplTextFrag where
-  liftTyped (RTFText t) =
-    liftTExp 'RTFText t
+  liftTyped (RTFText t) = liftTExp 'RTFText t
   liftTyped (RTFExpr e) = liftTExp 'RTFExpr e
 
 instance Parsecable ReplTextFrag where
