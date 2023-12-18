@@ -46,9 +46,9 @@ import Text.RE.PCRE.Text  ( RE, (?=~), reSource )
 
 -- template-haskell --------------------
 
-import Language.Haskell.TH         ( Name, Q )
-import Language.Haskell.TH.Syntax  ( Exp( AppE, ConE ), Lift( liftTyped )
-                                   , TExp( TExp ) )
+import Language.Haskell.TH         ( Name )
+import Language.Haskell.TH.Syntax  ( Code, Exp( AppE, ConE ), Lift( liftTyped )
+                                   , Quote, TExp( TExp ), liftCode )
 
 -- text --------------------------------
 
@@ -79,8 +79,8 @@ instance Printable GroupID where
 --------------------
 
 instance Lift GroupID where
-  liftTyped (GIDName t) = liftTExp 'GIDName t
-  liftTyped (GIDNum  n) = liftTExp 'GIDNum  n
+ liftTyped (GIDName t) = liftCExp 'GIDName t
+ liftTyped (GIDNum  n) = liftCExp 'GIDNum  n
 
 --------------------
 
@@ -138,9 +138,14 @@ class Groupable γ where
 
 --------------------
 
+
 {- | Simple lifter that applies a constructor to a value. -}
-liftTExp ∷ ∀ α τ . Lift τ ⇒ Name → τ → Q (TExp α)
-liftTExp y x = ⟦ x ⟧ ≫ return ∘ TExp ∘ AppE (ConE y)
+liftCExp ∷ ∀ α τ χ . (Lift τ, Quote χ) ⇒ Name → τ → Code χ α
+liftCExp y x = liftCode $ ⟦ x ⟧ ≫ return ∘ TExp ∘ AppE (ConE y)
+
+{- | Simple lifter that applies a constructor to a value. -}
+-- liftTExp ∷ ∀ α τ . Lift τ ⇒ Name → τ → Q (TExp α)
+-- liftTExp y x = ⟦ x ⟧ ≫ return ∘ TExp ∘ AppE (ConE y)
 
 instance Groupable (Match 𝕋) where
   group r (toGroupID → gid) match = do

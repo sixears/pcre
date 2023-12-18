@@ -29,9 +29,9 @@ import QuasiQuoting  ( QuasiQuoter, liftParsec, mkQQExp )
 
 -- template-haskell --------------------
 
-import Language.Haskell.TH         ( Name, Q )
-import Language.Haskell.TH.Syntax  ( Exp( AppE, ConE ), Lift( liftTyped )
-                                   , TExp( TExp ) )
+import Language.Haskell.TH         ( Name )
+import Language.Haskell.TH.Syntax  ( Code, Exp( AppE, ConE ), Lift( liftTyped )
+                                   , Quote, TExp( TExp ), liftCode )
 
 -- text --------------------------------
 
@@ -53,8 +53,10 @@ import PCRE.ReplFn    ( ReplArg( ReplArgF, ReplArgN, ReplArgT, ReplArgZ )
 --------------------------------------------------------------------------------
 
 {- | Simple lifter that applies a constructor to a value. -}
-liftTExp ∷ ∀ α τ . Lift τ ⇒ Name → τ → Q (TExp α)
-liftTExp y x = ⟦ x ⟧ ≫ return ∘ TExp ∘ AppE (ConE y)
+-- liftTExp ∷ ∀ α τ . Lift τ ⇒ Name → τ → Q (TExp α)
+-- liftTExp y x = ⟦ x ⟧ ≫ return ∘ TExp ∘ AppE (ConE y)
+liftCExp ∷ ∀ α τ χ . (Lift τ, Quote χ) ⇒ Name → τ → Code χ α
+liftCExp y x = liftCode $ ⟦ x ⟧ ≫ return ∘ TExp ∘ AppE (ConE y)
 
 ------------------------------------------------------------
 
@@ -68,8 +70,8 @@ instance Printable ReplTextFrag where
   print (RTFExpr e) = P.text $ toText e
 
 instance Lift ReplTextFrag where
-  liftTyped (RTFText t) = liftTExp 'RTFText t
-  liftTyped (RTFExpr e) = liftTExp 'RTFExpr e
+  liftTyped (RTFText t) = liftCExp 'RTFText t
+  liftTyped (RTFExpr e) = liftCExp 'RTFExpr e
 
 instance Parsecable ReplTextFrag where
   parser =
@@ -117,7 +119,7 @@ instance Printable ReplText where
   print (ReplText frags) = P.text $ ю (toText ⊳ frags)
 
 instance Lift ReplText where
-  liftTyped (ReplText frags) = do
+  liftTyped (ReplText frags) = liftCode $ do
     fs ← ⟦ frags ⟧
     return ∘ TExp $ AppE (ConE 'ReplText) fs
 

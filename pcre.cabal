@@ -10,7 +10,7 @@ name:                pcre
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.0.4.2
+version:             0.0.5.0
 
 -- A short (one-line) description of the package.
 synopsis:            handle PCRE-based REs, including textual replacements
@@ -88,13 +88,13 @@ library
                    , regex-with-pcre, template-haskell, text, text-printer
                    , unordered-containers
 
-                   , base1t           >= 0.0.4.0
-                   , monaderror-io    >= 1.2.2.0
-                   , parsec-plus-base >= 1.0.4.0
-                   , parsec-plus      >= 1.1.1.4
-                   , parser-plus      >= 1.0.7.1
-                   , quasiquoting     >= 1.0.1.1
-                   , stdmain          >= 1.6.1.1
+                   , base1t           >= 0.0.6.0
+                   , monaderror-io    >= 1.2.6.0
+                   , parsec-plus-base >= 1.0.5.23
+                   , parsec-plus      >= 1.1.1.44
+                   , parser-plus      >= 1.0.7.29
+                   , quasiquoting     >= 1.0.1.32
+                   , stdmain          >= 1.6.3.0
 
   -- Directories containing source files.
   hs-source-dirs:      src

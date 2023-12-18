@@ -26,7 +26,7 @@ import Text.RE.PCRE.Text  ( RE )
 -- template-haskell --------------------
 
 import Language.Haskell.TH.Syntax  ( Exp( AppE, ConE ), Lift( liftTyped )
-                                   , TExp( TExp ) )
+                                   , TExp( TExp ), liftCode )
 
 -- text --------------------------------
 
@@ -64,7 +64,7 @@ instance Printable ReplExpr where
 --------------------
 
 instance Lift ReplExpr where
-  liftTyped (ReplExpr fns gid) = do
+  liftTyped (ReplExpr fns gid) = liftCode $ do
     fns' ← ⟦ fns ⟧
     gid' ← ⟦ gid ⟧
     return ∘ TExp $ AppE (AppE (ConE 'ReplExpr) fns') gid'

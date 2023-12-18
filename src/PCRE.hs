@@ -10,6 +10,7 @@ module PCRE
   )
 where
 
+import Prelude ( error )
 import Base1T
 
 -- base --------------------------------
@@ -178,17 +179,21 @@ repl0 = let repnam t = RTFExpr $ ReplExpr [] (GIDName t)
                        , RTFText "]"
                        ]
 
+fromRight ∷ Show α ⇒ 𝔼 α β → β
+fromRight (𝕷 a) = error $ [fmt|fromRight: %w|] a
+fromRight (𝕽 b) = b
+
+parsec' ∷ 𝕋 → 𝕋 → ReplText
+parsec' name val = fromRight $ parsec @_ @ParseError name val
+
 repl1 ∷ ReplText
-𝕽 repl1 = parsec @ReplText @Parsec.Error.ParseError
-                 ("repl1"∷𝕋) (">>${pop}<< (${1}) [${0}] $$ \n"∷𝕋)
+repl1 = parsec' "repl1" ">>${pop}<< (${1}) [${0}] $$ \n"
 
 repl2 ∷ ReplText
-𝕽 repl2 = parsec @ReplText @Parsec.Error.ParseError
-                 ("repl2"∷𝕋) ("${1}${.title.tr(\".\",\" \") 2}"∷𝕋)
+repl2 = parsec' "repl2" "${1}${.title.tr(\".\",\" \") 2}"
 
 repl3 ∷ ReplText
-𝕽 repl3 = parsec @ReplText @Parsec.Error.ParseError
-                 ("repl3"∷𝕋) ("quux.${.title 1}/"∷𝕋)
+repl3 = parsec' "repl3" "quux.${.title 1}/"
 
 rep1_0 ∷ REPlacement -- s/${iggy}(fo+)${pop}(.ar)/>>${pop}<< (${1}) [${0}]/
 rep1_0 = REPlacement re1 repl0
