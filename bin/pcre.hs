@@ -22,23 +22,22 @@ import MockIO.MockIOClass  ( MockIOClass )
 import MonadIO       ( say )
 import MonadIO.Base  ( getArgs )
 
--- pcre --------------------------------
-
-import PCRE        ( (≃), replace )
-import PCRE.Error  ( AsREFnError, AsREGroupError )
-
 -- optparse-applicative ----------------
 
-import Options.Applicative.Builder   ( argument, eitherReader, flag, help, long
-                                     , metavar, option, short, strArgument
-                                     , value
-                                     )
+import Options.Applicative.Builder   ( flag, help, long, metavar, option, short
+                                     , strArgument, value )
 import Options.Applicative.NonEmpty  ( some1 )
 import Options.Applicative.Types     ( Parser )
 
 -- optparse-plus -----------------------
 
 import OptParsePlus  ( parsecReader )
+
+-- pcre --------------------------------
+
+import PCRE        ( (≃), replace )
+import PCRE.Error  ( AsREFnError, AsREGroupError )
+import PCRE.OptParse  ( parseRE )
 
 -- regex-with-pcre ---------------------
 
@@ -50,14 +49,13 @@ import StdMain  ( stdMainNoDR )
 
 -- text --------------------------------
 
-import Data.Text  ( lines, pack, dropWhileEnd, replicate, unlines )
+import Data.Text qualified as T
 
 ------------------------------------------------------------
 --                     local imports                      --
 ------------------------------------------------------------
 
-import PCRE              ( compRE )
-import PCRE.Error        ( PCREError, REParseError )
+import PCRE.Error        ( PCREError )
 import PCRE.Match        ( fmtMatch )
 import PCRE.REPlacement  ( REPlacement( REPlacement ) )
 import PCRE.ReplText     ( ReplText )
@@ -97,10 +95,6 @@ replacement = lens _replacement (\ o r → o { _replacement = r })
 
 ------------------------------------------------------------
 
-parseRE ∷ Parser RE
-parseRE = argument (eitherReader (first toString ∘ compRE @REParseError ∘ pack))
-                   (metavar "PCRE")
-
 parseOptions ∷ Parser Options
 parseOptions =
   Options ⊳ parseRE
@@ -118,7 +112,7 @@ parseOptions =
 ----------------------------------------
 
 indent ∷ ℕ → 𝕋 → 𝕋
-indent n t = unlines $ (replicate (fromIntegral n) " " ⊕) ⊳ lines t
+indent n t = T.unlines $ (T.replicate (fromIntegral n) " " ⊕) ⊳ T.lines t
 
 ----------------------------------------
 
@@ -128,7 +122,7 @@ sayT = say
 ----------------------------------------
 
 chomp ∷ 𝕋 → 𝕋
-chomp = dropWhileEnd (≡ '\n')
+chomp = T.dropWhileEnd (≡ '\n')
 
 ----------------------------------------
 

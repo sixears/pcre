@@ -1,54 +1,58 @@
+{-# LANGUAGE UnicodeSyntax #-}
 {- | PCRE Replacement Text; akin to the RHS of a perl s/// expression.
      This represents some text, with embedded replacement expressions
      (see `PCRE.ReplExpr`) that may be applied to an RE match to generate some
      new text. -}
 
 module PCRE.ReplText
-  ( ReplText(..), ReplTextFrag(..), repltext, tests )
-where
+  ( ReplText(..)
+  , ReplTextFrag(..)
+  , repltext
+  , tests
+  ) where
 
 import Base1T
 
 -- parsec-plus -------------------------
 
-import Parsec.Error  ( ParseError )
-import ParsecPlus    ( Parsecable( parser, parsec ), parse )
+import Parsec.Error ( ParseError )
+import ParsecPlus   ( Parsecable(parsec, parser), parse )
 
 -- parsers -----------------------------
 
-import Text.Parser.Char         ( char, noneOf )
-import Text.Parser.Combinators  ( eof )
+import Text.Parser.Char        ( char, noneOf )
+import Text.Parser.Combinators ( eof )
 
 -- parser-plus -------------------------
 
-import ParserPlus  ( parseBackslashedChar, tries )
+import ParserPlus ( parseBackslashedChar, tries )
 
 -- quasiquoting ------------------------
 
-import QuasiQuoting  ( QuasiQuoter, liftParsec, mkQQExp )
+import QuasiQuoting ( QuasiQuoter, liftParsec, mkQQExp )
 
 -- template-haskell --------------------
 
-import Language.Haskell.TH         ( Name )
-import Language.Haskell.TH.Syntax  ( Code, Exp( AppE, ConE ), Lift( liftTyped )
-                                   , Quote, TExp( TExp ), liftCode )
+import Language.Haskell.TH        ( Name )
+import Language.Haskell.TH.Syntax ( Code, Exp(AppE, ConE), Lift(liftTyped),
+                                    Quote, TExp(TExp), liftCode )
 
 -- text --------------------------------
 
-import Data.Text  ( append, pack, singleton )
+import Data.Text ( append, pack, singleton )
 
 -- text-printer ------------------------
 
-import qualified Text.Printer  as  P
+import Text.Printer qualified as P
 
 ------------------------------------------------------------
 --                     local imports                      --
 ------------------------------------------------------------
 
-import PCRE.GroupID   ( GroupID( GIDName, GIDNum ) )
-import PCRE.ReplExpr  ( ReplExpr( ReplExpr ) )
-import PCRE.ReplFn    ( ReplArg( ReplArgF, ReplArgN, ReplArgT, ReplArgZ )
-                      , ReplFn( ReplFn ) )
+import PCRE.GroupID  ( GroupID(GIDName, GIDNum) )
+import PCRE.ReplExpr ( ReplExpr(ReplExpr) )
+import PCRE.ReplFn   ( ReplArg(ReplArgF, ReplArgN, ReplArgT, ReplArgZ),
+                       ReplFn(ReplFn) )
 
 --------------------------------------------------------------------------------
 
@@ -62,8 +66,9 @@ liftCExp y x = liftCode $ ⟦ x ⟧ ≫ return ∘ TExp ∘ AppE (ConE y)
 
 {-| a single piece of a regular expression replacement template; either some
     static text, or a group-based expression -}
-data ReplTextFrag = RTFText 𝕋 | RTFExpr ReplExpr
-  deriving (Eq,Show)
+data ReplTextFrag = RTFText 𝕋
+                  | RTFExpr ReplExpr
+  deriving (Eq, Show)
 
 instance Printable ReplTextFrag where
   print (RTFText t) = P.text t
@@ -110,7 +115,7 @@ parseReplTextFragTests =
 
 {- | regular expression replacement text template -}
 newtype ReplText = ReplText [ReplTextFrag]
-  deriving Show
+  deriving (Show)
 
 instance Eq ReplText where
   (ReplText rtfs) == (ReplText rtfs') = mergeReplText rtfs ≡ mergeReplText rtfs'

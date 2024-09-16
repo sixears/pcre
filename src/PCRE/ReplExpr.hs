@@ -1,3 +1,4 @@
+{-# LANGUAGE UnicodeSyntax #-}
 {- | A group (backreference) identifier, along with a (possibly empty) list of
      replacement functions, which may be applied to an RE match to produce some
      `𝕋` (typically to insert at the location where the backreference was
@@ -5,45 +6,47 @@
  -}
 
 module PCRE.ReplExpr
-  ( ReplExpr(..), applyExpr, tests )
-where
+  ( ReplExpr(..)
+  , applyExpr
+  , tests
+  ) where
 
 import Base1T
 
 -- parsec-plus -------------------------
 
-import Parsec.Error  ( ParseError )
-import ParsecPlus    ( Parsecable( parser, parsec ) )
+import Parsec.Error ( ParseError )
+import ParsecPlus   ( Parsecable(parsec, parser) )
 
 -- parsers -----------------------------
 
-import Text.Parser.Char  ( char, spaces, string )
+import Text.Parser.Char ( char, spaces, string )
 
 -- regex-with-pcre ---------------------
 
-import Text.RE.PCRE.Text  ( RE )
+import Text.RE.PCRE.Text ( RE )
 
 -- template-haskell --------------------
 
-import Language.Haskell.TH.Syntax  ( Exp( AppE, ConE ), Lift( liftTyped )
-                                   , TExp( TExp ), liftCode )
+import Language.Haskell.TH.Syntax ( Exp(AppE, ConE), Lift(liftTyped),
+                                    TExp(TExp), liftCode )
 
 -- text --------------------------------
 
-import Data.Text  ( concat )
+import Data.Text ( concat )
 
 -- text-printer ------------------------
 
-import qualified Text.Printer  as  P
+import Text.Printer qualified as P
 
 ------------------------------------------------------------
 --                     local imports                      --
 ------------------------------------------------------------
 
-import PCRE.Error    ( AsREFnError, AsREGroupError )
-import PCRE.GroupID  ( Groupable, GroupID( GIDName, GIDNum ), group )
-import PCRE.ReplFn   ( ReplArg( ReplArgF, ReplArgN, ReplArgT, ReplArgZ )
-                     , ReplFn( ReplFn ), applyFn )
+import PCRE.Error   ( AsREFnError, AsREGroupError )
+import PCRE.GroupID ( GroupID(GIDName, GIDNum), Groupable, group )
+import PCRE.ReplFn  ( ReplArg(ReplArgF, ReplArgN, ReplArgT, ReplArgZ),
+                      ReplFn(ReplFn), applyFn )
 
 --------------------------------------------------------------------------------
 
@@ -53,7 +56,7 @@ import PCRE.ReplFn   ( ReplArg( ReplArgF, ReplArgN, ReplArgT, ReplArgZ )
  -}
 
 data ReplExpr = ReplExpr [ReplFn] GroupID
-  deriving (Eq,Show)
+  deriving (Eq, Show)
 
 --------------------
 
