@@ -1,3 +1,8 @@
+0.1.0.0 2024-09-23
+==================
+- harden PCRE as a type; remove PCRE.OptParse, make PCRE an instance of
+  OptParsePlus.OptReader
+
 0.0.6.0 2024-09-16
 ==================
 - add PCRE.OptParse

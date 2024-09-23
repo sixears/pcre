@@ -1,45 +1,46 @@
+{-# LANGUAGE UnicodeSyntax #-}
 {- | PCRE Wrapper & replacement utilities. -}
 
 module PCRE
-  ( REPlacement
-  , (≃), (=~)
-  , compRE, reMatch
-  , replace, replace1, replaceMany, replaceSome
-
+  ( PCRE
+  , REPlacement
+  , compRE
+  , reMatch
+  , replace
+  , replace1
+  , replaceMany
+  , replaceSome
   , tests
-  )
-where
+  , (=~)
+  , (?=~)
+  , (≃)
+  ) where
 
-import Prelude ( error )
 import Base1T
+import Prelude ( error )
 
 -- base --------------------------------
 
-import Data.List            ( reverse )
-import Data.List.NonEmpty   ( nonEmpty )
-import Data.Maybe           ( fromMaybe )
+import Data.List          ( reverse )
+import Data.List.NonEmpty ( nonEmpty )
+import Data.Maybe         ( fromMaybe )
 
 -- parsec-plus -------------------------
 
-import Parsec.Error  ( ParseError )
-import ParsecPlus    ( Parsecable( parsec ) )
-
--- regex-with-pcre ---------------------
-
-import Text.RE.PCRE.Text  ( RE, re )
+import Parsec.Error ( ParseError )
+import ParsecPlus   ( Parsecable(parsec) )
 
 ------------------------------------------------------------
 --                     local imports                      --
 ------------------------------------------------------------
 
-import PCRE.Error        ( AsREFnError, AsREGroupError, REFnGroupError )
-import PCRE.Base         ( compRE )
-import PCRE.GroupID      ( GroupID( GIDName, GIDNum ) )
-import PCRE.ReplExpr     ( ReplExpr( ReplExpr ), applyExpr )
-import PCRE.ReplText     ( ReplText( ReplText )
-                         , ReplTextFrag( RTFExpr, RTFText ) )
-import PCRE.REMatch      ( (=~), (≃), reMatch, sourcePost, sourcePre )
-import PCRE.REPlacement  ( REPlacement( REPlacement ) )
+import PCRE.Base        ( PCRE, compRE, pcre, (?=~) )
+import PCRE.Error       ( AsREFnError, AsREGroupError, REFnGroupError )
+import PCRE.GroupID     ( GroupID(GIDName, GIDNum) )
+import PCRE.REMatch     ( reMatch, sourcePost, sourcePre, (=~), (≃) )
+import PCRE.REPlacement ( REPlacement(REPlacement) )
+import PCRE.ReplExpr    ( ReplExpr(ReplExpr), applyExpr )
+import PCRE.ReplText    ( ReplText(ReplText), ReplTextFrag(RTFExpr, RTFText) )
 
 --------------------------------------------------------------------------------
 
@@ -89,7 +90,7 @@ replace1 ((a,r):rs) t =
 
 replace1Tests ∷ TestTree
 replace1Tests = testGroup "replace1" $
-  let check ∷ TestName → [(ℤ,REPlacement)] → 𝕋 → (ℤ,𝕋) -> TestTree
+  let check ∷ TestName → [(ℤ,REPlacement)] → 𝕋 → (ℤ,𝕋) → TestTree
       check nm reps txt ex =
         testCase nm $ 𝕽 (𝕵 ex) @=? replace1 @REFnGroupError reps txt
    in [ testCase "rep1_0 rep1_1 nonsense" $
@@ -117,7 +118,7 @@ replaceMany rs t = first reverse ⊳
 
 replaceManyTests ∷ TestTree
 replaceManyTests = testGroup "replaceMany" $
-  let check ∷ TestName → [(ℤ,REPlacement)] → 𝕋 → ([ℤ],𝕋) -> TestTree
+  let check ∷ TestName → [(ℤ,REPlacement)] → 𝕋 → ([ℤ],𝕋) → TestTree
       check nm reps txt ex =
         testCase nm $ (𝕽 ex) @=? replaceMany @REFnGroupError reps txt
    in [ check "rep1_0,rep1_1 nonsense" [(0,rep1_0),(1,rep1_1)]
@@ -141,7 +142,7 @@ replaceSome rs t = (\ (xs,u) → (,u) ⊳ nonEmpty xs) ⊳ replaceMany rs t
 
 replaceSomeTests ∷ TestTree
 replaceSomeTests = testGroup "replaceSome" $
-  let check ∷ TestName → [(ℤ,REPlacement)] → 𝕋 → 𝕄 (NonEmpty ℤ, 𝕋) -> TestTree
+  let check ∷ TestName → [(ℤ,REPlacement)] → 𝕋 → 𝕄 (NonEmpty ℤ, 𝕋) → TestTree
       check nm reps txt ex =
         testCase nm $ (𝕽 $ ex) @=? replaceSome @REFnGroupError reps txt
    in [ check "rep1_0,rep1_1 nonsense" [(0,rep1_0),(1,rep1_1)] "nonsense" 𝕹
@@ -159,12 +160,12 @@ replaceSomeTests = testGroup "replaceSome" $
 --                       test data                        --
 ------------------------------------------------------------
 
-re1 ∷ RE
-re1 = [re|${iggy}(fo+)${pop}(.ar)|]
-re2 ∷ RE
-re2 = [re|^${one}(\w+)${two}(\..*)$|]
-re3 ∷ RE
-re3 = [re|(?<=/)foo\.*(.{3})|]
+re1 ∷ PCRE
+re1 = [pcre|${iggy}(fo+)${pop}(.ar)|]
+re2 ∷ PCRE
+re2 = [pcre|^${one}(\w+)${two}(\..*)$|]
+re3 ∷ PCRE
+re3 = [pcre|(?<=/)foo\.*(.{3})|]
 
 repl0 ∷ ReplText -- ">>${pop}<< (${1}) [${0}]"
 repl0 = let repnam t = RTFExpr $ ReplExpr [] (GIDName t)

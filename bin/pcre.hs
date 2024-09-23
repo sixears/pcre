@@ -24,24 +24,19 @@ import MonadIO.Base  ( getArgs )
 
 -- optparse-applicative ----------------
 
-import Options.Applicative.Builder   ( flag, help, long, metavar, option, short
-                                     , strArgument, value )
+import Options.Applicative.Builder   ( flag, help, argument, long, metavar
+                                     , option, short, strArgument, value )
 import Options.Applicative.NonEmpty  ( some1 )
 import Options.Applicative.Types     ( Parser )
 
 -- optparse-plus -----------------------
 
-import OptParsePlus  ( parsecReader )
+import OptParsePlus  ( parsecReader, readM )
 
 -- pcre --------------------------------
 
-import PCRE        ( (≃), replace )
+import PCRE        ( (≃), (?=~), replace, PCRE )
 import PCRE.Error  ( AsREFnError, AsREGroupError )
-import PCRE.OptParse  ( parseRE )
-
--- regex-with-pcre ---------------------
-
-import Text.RE.PCRE.Text  ( RE, (?=~) )
 
 -- stdmain -----------------------------
 
@@ -67,7 +62,7 @@ data ShowREMatch = NoShowREMatch | ShowREMatch
 
 ------------------------------------------------------------
 
-data Options = Options { _pcre        ∷ RE
+data Options = Options { _pcre        ∷ PCRE
                        , _args        ∷ NonEmpty 𝕋
                        , _showREMatch ∷ ShowREMatch
                        , _replacement ∷ 𝕄 ReplText
@@ -75,7 +70,7 @@ data Options = Options { _pcre        ∷ RE
 
 --------------------
 
-pcre ∷ Lens' Options RE
+pcre ∷ Lens' Options PCRE
 pcre = lens _pcre (\ o p → o { _pcre = p })
 
 --------------------
@@ -97,7 +92,7 @@ replacement = lens _replacement (\ o r → o { _replacement = r })
 
 parseOptions ∷ Parser Options
 parseOptions =
-  Options ⊳ parseRE
+  Options ⊳ argument readM (metavar "PCRE")
           ⊵ some1 (strArgument (metavar "MATCH-TARGET"))
           ⊵ flag NoShowREMatch ShowREMatch (ю [short 'r', long "show-re-match"
                                               , help "show REMatch datum"])

@@ -1,74 +1,76 @@
+{-# LANGUAGE UnicodeSyntax #-}
 {- | PCRE Wrapper & replacement utilities. -}
 
 module PCRE.GroupID
-  ( Groupable(..), GroupID(..), ToGroupID(..), groupNm
-
+  ( GroupID(..)
+  , Groupable(..)
+  , ToGroupID(..)
+  , groupNm
   , tests
-  )
-where
+  ) where
 
 import Base1T
 
 -- array -------------------------------
 
-import Data.Array  ( assocs )
+import Data.Array ( assocs )
 
 -- base --------------------------------
 
-import Data.List  ( lookup )
-import Text.Read  ( read )
+import Data.List ( lookup )
+import Text.Read ( read )
 
 -- parsec-plus -------------------------
 
-import ParsecPlus  ( Parsecable( parser ) )
+import ParsecPlus ( Parsecable(parser) )
 
 -- parsers -----------------------------
 
-import Text.Parser.Char  ( CharParsing, alphaNum, letter )
+import Text.Parser.Char ( CharParsing, alphaNum, letter )
 
 -- parser-plus -------------------------
 
-import ParserPlus  ( digits )
+import ParserPlus ( digits )
 
 -- regex -------------------------------
 
-import Text.RE.Replace  ( Capture( Capture, capturedText )
-                        , CaptureID( IsCaptureName, IsCaptureOrdinal )
-                        , CaptureName( CaptureName )
-                        , CaptureOrdinal( CaptureOrdinal )
-                        , Match( captureNames, matchArray, matchSource )
-                        , findCaptureID, matchCapture, matchedText
-                        )
+import Text.RE.Replace ( Capture(Capture, capturedText),
+                         CaptureID(IsCaptureName, IsCaptureOrdinal),
+                         CaptureName(CaptureName),
+                         CaptureOrdinal(CaptureOrdinal),
+                         Match(captureNames, matchArray, matchSource),
+                         findCaptureID, matchCapture, matchedText )
 
 -- regex-with-pcre ---------------------
 
-import Text.RE.PCRE.Text  ( RE, (?=~), reSource )
+import Text.RE.PCRE.Text ( reSource )
 
 -- template-haskell --------------------
 
-import Language.Haskell.TH         ( Name )
-import Language.Haskell.TH.Syntax  ( Code, Exp( AppE, ConE ), Lift( liftTyped )
-                                   , Quote, TExp( TExp ), liftCode )
+import Language.Haskell.TH        ( Name )
+import Language.Haskell.TH.Syntax ( Code, Exp(AppE, ConE), Lift(liftTyped),
+                                    Quote, TExp(TExp), liftCode )
 
 -- text --------------------------------
 
-import Data.Text  ( pack, unpack )
+import Data.Text ( pack, unpack )
 
 -- text-printer ------------------------
 
-import qualified Text.Printer  as  P
+import Text.Printer qualified as P
 
 ------------------------------------------------------------
 --                     local imports                      --
 ------------------------------------------------------------
 
-import PCRE.Base     ( compRE )
-import PCRE.Error    ( AsREGroupError, REParseGroupError, throwAsREGroupError )
+import PCRE.Base  ( PCRE(unPCRE), compRE, (?=~) )
+import PCRE.Error ( AsREGroupError, REParseGroupError, throwAsREGroupError )
 
 --------------------------------------------------------------------------------
 
-data GroupID = GIDName 𝕋 | GIDNum ℕ
-  deriving (Eq,Show)
+data GroupID = GIDName 𝕋
+             | GIDNum ℕ
+  deriving (Eq, Show)
 
 --------------------
 
@@ -134,7 +136,7 @@ class Groupable γ where
   {- RE is provided purely for error messages -}
   group ∷ ∀ ε α η .
            (ToGroupID α, AsREGroupError ε, MonadError ε η, HasCallStack) ⇒
-           RE → α → γ → η 𝕋
+           PCRE → α → γ → η 𝕋
 
 --------------------
 
@@ -155,7 +157,7 @@ instance Groupable (Match 𝕋) where
       case lookup n (assocs $ matchArray match) of
         𝕹 → throwAsREGroupError $
               [fmt|group not found: %t in match of '%t' against re '%s'|]
-                (groupNm gid) (matchSource match) (reSource r)
+              (groupNm gid) (matchSource match) (reSource $ unPCRE r)
         𝕵 g → return $ capturedText g
 
 --------------------
@@ -163,11 +165,11 @@ instance Groupable (Match 𝕋) where
 groupTests ∷ TestTree
 groupTests =
   let r1 = compRE @_ @(𝔼 _) "${iggy}(fo+)${pop}(.ar)"
-      gpge ∷ ToGroupID α ⇒ RE → α → Match 𝕋 → 𝔼 REParseGroupError 𝕋
+      gpge ∷ ToGroupID α ⇒ PCRE → α → Match 𝕋 → 𝔼 REParseGroupError 𝕋
       gpge = group
-      gpgeT ∷ RE → 𝕋 → Match 𝕋 → 𝔼 REParseGroupError 𝕋
+      gpgeT ∷ PCRE → 𝕋 → Match 𝕋 → 𝔼 REParseGroupError 𝕋
       gpgeT = gpge
-      gpgeN ∷ RE → ℕ → Match 𝕋 → 𝔼 REParseGroupError 𝕋
+      gpgeN ∷ PCRE → ℕ → Match 𝕋 → 𝔼 REParseGroupError 𝕋
       gpgeN = gpge
       testCapT t ex =
         testCase ("capture " ⊕ unpack t) $
@@ -199,8 +201,6 @@ groupTests =
     , testCapN 2 "bar"
     , testCapNFail 3
     ]
-
-------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 

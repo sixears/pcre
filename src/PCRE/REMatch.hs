@@ -1,73 +1,75 @@
+{-# LANGUAGE UnicodeSyntax #-}
 {- | Encapsulation of groups (numbered), captures (by name), source, pre- and
      post-sequences for a PCRE match. -}
 
 module PCRE.REMatch
   ( REMatch
-  , (≃), (=~), reMatch
-  , sourceCaptures, sourceGroups, sourcePre, sourcePost, sourceText
-
+  , reMatch
+  , sourceCaptures
+  , sourceGroups
+  , sourcePost
+  , sourcePre
+  , sourceText
   , tests
-  )
-where
+  , (=~)
+  , (≃)
+  ) where
 
 import Base1T
 
 -- base --------------------------------
 
-import Data.List  ( sortOn, zip )
+import Data.List ( sortOn, zip )
 
 -- lens --------------------------------
 
-import Control.Lens.Getter  ( view )
+import Control.Lens.Getter ( view )
 
 -- regex -------------------------------
 
-import Text.RE.Replace  ( Capture( captureLength, captureOffset
-                                 , captureSource, capturedText )
-                        , CaptureID( IsCaptureOrdinal )
-                        , CaptureName( getCaptureName )
-                        , CaptureOrdinal( CaptureOrdinal), Match
-                        , (!$$)
-                        , captureNames, matchCaptures
-                        )
+import Text.RE.Replace ( Capture(captureLength, captureOffset, captureSource, capturedText),
+                         CaptureID(IsCaptureOrdinal),
+                         CaptureName(getCaptureName),
+                         CaptureOrdinal(CaptureOrdinal), Match, captureNames,
+                         matchCaptures, (!$$) )
 
 -- regex-with-pcre ---------------------
 
-import Text.RE.PCRE.Text  ( RE, (?=~), reSource )
+import Text.RE.PCRE.Text ( reSource )
 
 -- text --------------------------------
 
-import Data.Text  ( drop, take, unlines )
+import Data.Text ( drop, take, unlines )
 
 -- text-printer ------------------------
 
-import qualified  Text.Printer  as  P
+import Text.Printer qualified as P
 
 -- unordered-containers ----------------
 
-import qualified Data.HashMap.Lazy  as  HashMap
-import Data.HashMap.Lazy  ( HashMap, (!?), foldMapWithKey )
+import Data.HashMap.Lazy ( HashMap, foldMapWithKey, (!?) )
+import Data.HashMap.Lazy qualified as HashMap
 
 ------------------------------------------------------------
 --                     local imports                      --
 ------------------------------------------------------------
 
-import PCRE.Base      ( compRE )
-import PCRE.Error     ( REParseError, throwAsREGroupError )
-import PCRE.GroupID   ( Groupable( group ), GroupID( GIDName, GIDNum )
-                      , ToGroupID( toGroupID ), groupNm )
+import PCRE.Base    ( PCRE(unPCRE), compRE, (?=~) )
+import PCRE.Error   ( REParseError, throwAsREGroupError )
+import PCRE.GroupID ( GroupID(GIDName, GIDNum), Groupable(group),
+                      ToGroupID(toGroupID), groupNm )
 
 --------------------------------------------------------------------------------
 
 {-| details of a regular expression match, including pre- & post-, and capture
     groups by name & position -}
-data REMatch α = REMatch { _sourceText     ∷ α
-                         , _sourceGroups   ∷ [α]
-                         , _sourceCaptures ∷ HashMap 𝕋 α
-                         , _sourcePre      ∷ α
-                         , _sourcePost     ∷ α
+data REMatch α = REMatch { _sourceText     :: α
+                         , _sourceGroups   :: [α]
+                         , _sourceCaptures :: HashMap 𝕋 α
+                         , _sourcePre      :: α
+                         , _sourcePost     :: α
                          }
-  deriving (Eq,Show)
+  deriving (Eq, Show)
 
 --------------------
 
@@ -77,7 +79,7 @@ instance Groupable (REMatch 𝕋) where
       𝕵 t → return t
       𝕹   → throwAsREGroupError $
               [fmt|group not found: %t in match of '%t' against re '%s'|]
-                (groupNm gid) (match ⊣ sourceText) (reSource r)
+                (groupNm gid) (match ⊣ sourceText) (reSource $ unPCRE r)
 
 --------------------
 
@@ -178,11 +180,11 @@ reMatch m = matchCaptures m ⊲
 
 
 {-| match some `𝕋` against an `RE`; returning an `REMatch` -}
-(=~) ∷ RE → 𝕋 → 𝕄 (REMatch 𝕋)
+(=~) ∷ PCRE → 𝕋 → 𝕄 (REMatch 𝕋)
 r =~ t = reMatch (t ?=~ r)
 
 {- | alias for `=~` -}
-(≃) ∷ RE → 𝕋 → 𝕄 (REMatch 𝕋)
+(≃) ∷ PCRE → 𝕋 → 𝕄 (REMatch 𝕋)
 r ≃ t = reMatch (t ?=~ r)
 
 --------------------------------------------------------------------------------
@@ -205,5 +207,5 @@ _testr ∷ 𝕊 → ℕ → IO ExitCode
 _testr = runTestsReplay tests
 
 -- that's all, folks! ----------------------------------------------------------
--- PSA	^${path}(.*/)?(?=[^/]+$)${series}(.*?)\.(?:\.202\d\.)?S${s}(\d{2})E${e}(\d{2})(?:\.${name}(.*?))?(?:\.(?:216|108)0p\..*)\.${ext}(mp4|mkv)	"${path}${series} - ${s}x${e} - ${.tr(\".\",\" \") name}.${ext}"
+-- PSA        ^${path}(.*/)?(?=[^/]+$)${series}(.*?)\.(?:\.202\d\.)?S${s}(\d{2})E${e}(\d{2})(?:\.${name}(.*?))?(?:\.(?:216|108)0p\..*)\.${ext}(mp4|mkv)        "${path}${series} - ${s}x${e} - ${.tr(\".\",\" \") name}.${ext}"
 -- rename -f /home/martyn/.rename/tv --dry-run The.Morning.Show.S02E01.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E02.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E03.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E04.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E05.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E06.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E07.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E08.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E09.1080p.WEBRip.x265-RARBG.mp4 The.Morning.Show.S02E10.1080p.WEBRip.x265-RARBG.mp4 --debug

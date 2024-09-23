@@ -22,10 +22,6 @@ import ParsecPlus   ( Parsecable(parsec, parser) )
 
 import Text.Parser.Char ( char, spaces, string )
 
--- regex-with-pcre ---------------------
-
-import Text.RE.PCRE.Text ( RE )
-
 -- template-haskell --------------------
 
 import Language.Haskell.TH.Syntax ( Exp(AppE, ConE), Lift(liftTyped),
@@ -43,6 +39,7 @@ import Text.Printer qualified as P
 --                     local imports                      --
 ------------------------------------------------------------
 
+import PCRE.Base    ( PCRE )
 import PCRE.Error   ( AsREFnError, AsREGroupError )
 import PCRE.GroupID ( GroupID(GIDName, GIDNum), Groupable, group )
 import PCRE.ReplFn  ( ReplArg(ReplArgF, ReplArgN, ReplArgT, ReplArgZ),
@@ -135,7 +132,7 @@ parseReplExprTests =
 {- | Apply a replacement expression to a group. -}
 applyExpr ∷ ∀ ε γ η .
             (Groupable γ, AsREGroupError ε, AsREFnError ε, MonadError ε η) ⇒
-           ReplExpr → RE → γ → η 𝕋
+           ReplExpr → PCRE → γ → η 𝕋
 applyExpr (ReplExpr fns gid) r m =
   group r gid m ≫ \ t → foldM applyFn t fns
 

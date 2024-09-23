@@ -1,47 +1,44 @@
+{-# LANGUAGE UnicodeSyntax #-}
 {-| combined RE and replacement text -}
 
 module PCRE.REPlacement
-  ( REPlacement(..) )
-where
+  ( REPlacement(..)
+  ) where
 
 import Base1T
 
 -- hashable ----------------------------
 
-import Data.Hashable  ( Hashable( hashWithSalt ) )
+import Data.Hashable ( Hashable(hashWithSalt) )
 
 -- parsec-plus -------------------------
 
-import Parsec.Error  ( ParseError )
-import ParsecPlus    ( Parsecable( parser, parsec ), eitherParsec )
+import Parsec.Error ( ParseError )
+import ParsecPlus   ( Parsecable(parsec, parser), eitherParsec )
 
 -- parser-plus -------------------------
 
-import ParserPlus  ( stringMaybeDQuoted )
+import ParserPlus ( stringMaybeDQuoted )
 
 -- parsers -----------------------------
 
-import Text.Parser.Char  ( char )
-
--- regex-with-pcre ---------------------
-
-import Text.RE.PCRE.Text  ( RE, reSource )
+import Text.Parser.Char ( char )
 
 -- text-printer ------------------------
 
-import qualified Text.Printer  as  P
+import Text.Printer qualified as P
 
 ------------------------------------------------------------
 --                     local imports                      --
 ------------------------------------------------------------
 
-import PCRE.Base      ( unREParsecable )
-import PCRE.ReplText  ( ReplText )
+import PCRE.Base     ( PCRE, reSource )
+import PCRE.ReplText ( ReplText )
 
 --------------------------------------------------------------------------------
 
 {- | An RE with its replacement pattern. -}
-data REPlacement = REPlacement RE ReplText
+data REPlacement = REPlacement PCRE ReplText
 
 --------------------
 
@@ -63,7 +60,7 @@ instance Hashable REPlacement where
 --------------------
 
 instance Parsecable REPlacement where
-  parser = REPlacement ⊳ (unREParsecable ⊳ parser) ⋪ many (char '\t')
+  parser = REPlacement ⊳ (parser) ⋪ many (char '\t')
                        ⊵ (eitherParsec stringMaybeDQuoted
                                        (\ s → parsec @_ @ParseError s s))
 
