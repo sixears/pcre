@@ -1,3 +1,7 @@
+0.1.1.0 2025-09-08
+==================
+- add (~~), (≈)
+
 0.1.0.0 2024-09-23
 ==================
 - harden PCRE as a type; remove PCRE.OptParse, make PCRE an instance of

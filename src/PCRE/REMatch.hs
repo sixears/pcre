@@ -12,14 +12,17 @@ module PCRE.REMatch
   , sourceText
   , tests
   , (=~)
+  , (~~)
   , (≃)
+  , (≈)
   ) where
 
 import Base1T
 
 -- base --------------------------------
 
-import Data.List ( sortOn, zip )
+import Data.List  ( sortOn, zip )
+import Data.Maybe ( isJust )
 
 -- lens --------------------------------
 
@@ -186,6 +189,15 @@ r =~ t = reMatch (t ?=~ r)
 {- | alias for `=~` -}
 (≃) ∷ PCRE → 𝕋 → 𝕄 (REMatch 𝕋)
 r ≃ t = reMatch (t ?=~ r)
+
+{- | does match (at all) -}
+(~~) ∷ 𝕋 → PCRE → 𝔹
+r ~~ t = isJust $ t =~ r
+
+{- | alias for `~~` -}
+(≈) ∷ 𝕋 → PCRE → 𝔹
+(≈) = (~~)
+
 
 --------------------------------------------------------------------------------
 

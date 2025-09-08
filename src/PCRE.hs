@@ -14,6 +14,8 @@ module PCRE
   , (=~)
   , (?=~)
   , (≃)
+  , (~~)
+  , (≈)
   ) where
 
 import Base1T
@@ -37,7 +39,7 @@ import ParsecPlus   ( Parsecable(parsec) )
 import PCRE.Base        ( PCRE, compRE, pcre, (?=~) )
 import PCRE.Error       ( AsREFnError, AsREGroupError, REFnGroupError )
 import PCRE.GroupID     ( GroupID(GIDName, GIDNum) )
-import PCRE.REMatch     ( reMatch, sourcePost, sourcePre, (=~), (≃) )
+import PCRE.REMatch     ( reMatch, sourcePost, sourcePre, (=~), (~~), (≃), (≈) )
 import PCRE.REPlacement ( REPlacement(REPlacement) )
 import PCRE.ReplExpr    ( ReplExpr(ReplExpr), applyExpr )
 import PCRE.ReplText    ( ReplText(ReplText), ReplTextFrag(RTFExpr, RTFText) )
