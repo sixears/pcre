@@ -62,17 +62,17 @@ replace (REPlacement r (ReplText repl)) t = sequence $
 replaceTests ∷ TestTree
 replaceTests = testGroup "replace"
   [ testCase "repl0 re1 nonsense" $
-      𝕽 𝕹 @=? replace @REFnGroupError @(𝔼 _) rep1_0 "nonsense"
+      𝓡 𝓝 @=? replace @REFnGroupError @(𝔼 _) rep1_0 "nonsense"
   , testCase "repl0 re1 foobar" $
-      𝕽 (𝕵 ">>bar<< (foo) [foobar]") @=? replace @REFnGroupError rep1_0 "foobar"
+      𝓡 (𝓙 ">>bar<< (foo) [foobar]") @=? replace @REFnGroupError rep1_0 "foobar"
   , testCase "repl1 re1 foobar" $
-      𝕽 (𝕵 ">>bar<< (foo) [foobar] $ \n") @=?
+      𝓡 (𝓙 ">>bar<< (foo) [foobar] $ \n") @=?
         replace @REFnGroupError rep1_1 "foobar"
   , testCase "repl2 re2 Hello.mum!" $
-      𝕽 (𝕵 "Hello Mum!") @=?
+      𝓡 (𝓙 "Hello Mum!") @=?
         replace @REFnGroupError rep2_2 "Hello.mum!"
   , testCase "repl3 re3 /tmp/foo.barend" $
-      𝕽 (𝕵 "/tmp/quux.Bar/end") @=?
+      𝓡 (𝓙 "/tmp/quux.Bar/end") @=?
         replace @REFnGroupError rep3_3 "/tmp/foo.barend"
   ]
 
@@ -86,17 +86,17 @@ replaceTests = testGroup "replace"
  -}
 replace1 ∷ ∀ ε α η . (AsREFnError ε, AsREGroupError ε, MonadError ε η) ⇒
            [(α,REPlacement)] → 𝕋 → η (𝕄 (α,𝕋))
-replace1 []         _ = return 𝕹
+replace1 []         _ = return 𝓝
 replace1 ((a,r):rs) t =
-  replace r t ≫ maybe (replace1 rs t) (return ∘ 𝕵 ∘ (a,))
+  replace r t ≫ maybe (replace1 rs t) (return ∘ 𝓙 ∘ (a,))
 
 replace1Tests ∷ TestTree
 replace1Tests = testGroup "replace1" $
   let check ∷ TestName → [(ℤ,REPlacement)] → 𝕋 → (ℤ,𝕋) → TestTree
       check nm reps txt ex =
-        testCase nm $ 𝕽 (𝕵 ex) @=? replace1 @REFnGroupError reps txt
+        testCase nm $ 𝓡 (𝓙 ex) @=? replace1 @REFnGroupError reps txt
    in [ testCase "rep1_0 rep1_1 nonsense" $
-          𝕽 𝕹 @=? replace1 @REFnGroupError @_ @(𝔼 _)
+          𝓡 𝓝 @=? replace1 @REFnGroupError @_ @(𝔼 _)
                            [(0∷ℤ,rep1_0),(1,rep1_1)] "nonsense"
       , check "rep1_0,rep1_1"
               [(0,rep1_0),(1,rep1_1)] "foobar" (0,">>bar<< (foo) [foobar]")
@@ -122,7 +122,7 @@ replaceManyTests ∷ TestTree
 replaceManyTests = testGroup "replaceMany" $
   let check ∷ TestName → [(ℤ,REPlacement)] → 𝕋 → ([ℤ],𝕋) → TestTree
       check nm reps txt ex =
-        testCase nm $ (𝕽 ex) @=? replaceMany @REFnGroupError reps txt
+        testCase nm $ (𝓡 ex) @=? replaceMany @REFnGroupError reps txt
    in [ check "rep1_0,rep1_1 nonsense" [(0,rep1_0),(1,rep1_1)]
               "nonsense" ([],"nonsense")
       , check "rep1_0,rep1_1" [(0,rep1_0),(1,rep1_1)]
@@ -146,14 +146,14 @@ replaceSomeTests ∷ TestTree
 replaceSomeTests = testGroup "replaceSome" $
   let check ∷ TestName → [(ℤ,REPlacement)] → 𝕋 → 𝕄 (NonEmpty ℤ, 𝕋) → TestTree
       check nm reps txt ex =
-        testCase nm $ (𝕽 $ ex) @=? replaceSome @REFnGroupError reps txt
-   in [ check "rep1_0,rep1_1 nonsense" [(0,rep1_0),(1,rep1_1)] "nonsense" 𝕹
+        testCase nm $ (𝓡 $ ex) @=? replaceSome @REFnGroupError reps txt
+   in [ check "rep1_0,rep1_1 nonsense" [(0,rep1_0),(1,rep1_1)] "nonsense" 𝓝
       , check "rep1_0,rep1_1" [(0,rep1_0),(1,rep1_1)]
-              "foobar" (𝕵(0:|[1],">>bar<< (foo) [>>bar<< (foo) [foobar] $ \n]"))
+              "foobar" (𝓙(0:|[1],">>bar<< (foo) [>>bar<< (foo) [foobar] $ \n]"))
       , check "rep1_1,rep1_0" [(1,rep1_1),(0,rep1_0)]
-              "foobar" (𝕵(1:|[0],">>bar<< (foo) [>>bar<< (foo) [foobar]] $ \n"))
+              "foobar" (𝓙(1:|[0],">>bar<< (foo) [>>bar<< (foo) [foobar]] $ \n"))
       , check "rep1_1,rep3_3,rep1_0" [(1,rep1_1),(3,rep3_3),(0,rep1_0)]
-              "foobar" (𝕵(1:|[0],">>bar<< (foo) [>>bar<< (foo) [foobar]] $ \n"))
+              "foobar" (𝓙(1:|[0],">>bar<< (foo) [>>bar<< (foo) [foobar]] $ \n"))
       ]
 
 --------------------------------------------------------------------------------
@@ -183,8 +183,8 @@ repl0 = let repnam t = RTFExpr $ ReplExpr [] (GIDName t)
                        ]
 
 fromRight ∷ Show α ⇒ 𝔼 α β → β
-fromRight (𝕷 a) = error $ [fmt|fromRight: %w|] a
-fromRight (𝕽 b) = b
+fromRight (𝓛 a) = error $ [fmt|fromRight: %w|] a
+fromRight (𝓡 b) = b
 
 parsec' ∷ 𝕋 → 𝕋 → ReplText
 parsec' name val = fromRight $ parsec @_ @ParseError name val

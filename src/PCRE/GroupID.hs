@@ -152,13 +152,13 @@ liftCExp y x = liftCode $ ⟦ x ⟧ ≫ return ∘ TExp ∘ AppE (ConE y)
 instance Groupable (Match 𝕋) where
   group r (toGroupID → gid) match = do
       n ← case findCaptureID (capID gid) (captureNames match) of
-        𝕷 e → throwAsREGroupError (pack e)
-        𝕽 n → return n
+        𝓛 e → throwAsREGroupError (pack e)
+        𝓡 n → return n
       case lookup n (assocs $ matchArray match) of
-        𝕹 → throwAsREGroupError $
+        𝓝 → throwAsREGroupError $
               [fmt|group not found: %t in match of '%t' against re '%s'|]
               (groupNm gid) (matchSource match) (reSource $ unPCRE r)
-        𝕵 g → return $ capturedText g
+        𝓙 g → return $ capturedText g
 
 --------------------
 
@@ -190,9 +190,9 @@ groupTests =
    in testGroup "group"
     [ testCase "parse r1" $ assertRight (const $ assertSuccess "parse r1") r1
     , testCase "match foobar" $
-        assertRight ((@=? 𝕵 "foobar") ∘ matchedText) $ ("foobar" ?=~) ⊳ r1
+        assertRight ((@=? 𝓙 "foobar") ∘ matchedText) $ ("foobar" ?=~) ⊳ r1
     , testCase "capture foobar" $
-        assertRight ((@=? 𝕵 (Capture "foobar" "foobar" 0 6)) ∘ matchCapture) $
+        assertRight ((@=? 𝓙 (Capture "foobar" "foobar" 0 6)) ∘ matchCapture) $
           ("foobar" ?=~) ⊳ r1
     , testCapT "iggy" "foo"
     , testCapT "pop"  "bar"

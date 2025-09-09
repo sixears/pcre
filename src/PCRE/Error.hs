@@ -2,7 +2,8 @@
 
 module PCRE.Error
   ( AsREFnError(..), AsREGroupError(..), AsREParseError(..), PCREError
-  , REFnError, REFnGroupError, REGroupError, REParseError, REParseGroupError
+  , PCREScriptError, REFnError, REFnGroupError, REGroupError, REParseError
+  , REParseGroupError
   , throwAsREFnError, throwAsREGroupError, throwAsREParseError, throwREFnError
   )
 where
@@ -13,9 +14,22 @@ import Base1T
 
 import Control.Monad.Fail  ( MonadFail( fail ) )
 
+-- fpath -------------------------------
+
+import FPath.Error.FPathError ( AsFPathError(_FPathError) )
+
+-- monadio-plus ------------------------
+
+import MonadIO.Error.CreateProcError ( AsCreateProcError(_CreateProcError) )
+import MonadIO.Error.ProcExitError   ( AsProcExitError(_ProcExitError) )
+
 -- stdmain -----------------------------
 
-import StdMain.UsageError  ( AsUsageError( _UsageError ), UsageIOError )
+import StdMain.UsageError            ( AsUsageError( _UsageError ),UsageIOError )
+import StdMain.ProcOutputParseError
+         ( AsProcOutputParseError( _ProcOutputParseError )
+         , AsTextError( _TextError )
+         , ScriptError )
 
 -- text --------------------------------
 
@@ -55,7 +69,7 @@ instance Printable REParseError where
 --------------------
 
 instance MonadFail (𝔼 REParseError) where
-  fail = 𝕷 ∘ (\ t → REParseError t callStack) ∘ pack
+  fail = 𝓛 ∘ (\ t → REParseError t callStack) ∘ pack
 
 ----------------------------------------
 
@@ -101,7 +115,7 @@ instance Printable REGroupError where
 --------------------
 
 instance MonadFail (𝔼 REGroupError) where
-  fail = 𝕷 ∘ (\ t → REGroupError t callStack) ∘ pack
+  fail = 𝓛 ∘ (\ t → REGroupError t callStack) ∘ pack
 
 ----------------------------------------
 
@@ -132,12 +146,12 @@ data REParseGroupError = REPGE_GroupE REGroupError
 ----------------------------------------
 
 _REPGE_GroupE ∷ Prism' REParseGroupError REGroupError
-_REPGE_GroupE = prism' REPGE_GroupE (\ case REPGE_GroupE e → 𝕵 e; _ → 𝕹)
+_REPGE_GroupE = prism' REPGE_GroupE (\ case REPGE_GroupE e → 𝓙 e; _ → 𝓝)
 
 ----------
 
 _REPGE_ParseE ∷ Prism' REParseGroupError REParseError
-_REPGE_ParseE = prism' REPGE_ParseE (\ case REPGE_ParseE e → 𝕵 e; _ → 𝕹)
+_REPGE_ParseE = prism' REPGE_ParseE (\ case REPGE_ParseE e → 𝓙 e; _ → 𝓝)
 
 ----------------------------------------
 
@@ -164,12 +178,12 @@ data REFnGroupError = REFGE_GroupE REGroupError
 ----------------------------------------
 
 _REFGE_GroupE ∷ Prism' REFnGroupError REGroupError
-_REFGE_GroupE = prism' REFGE_GroupE (\ case REFGE_GroupE e → 𝕵 e; _ → 𝕹)
+_REFGE_GroupE = prism' REFGE_GroupE (\ case REFGE_GroupE e → 𝓙 e; _ → 𝓝)
 
 ----------
 
 _REFGE_FnE ∷ Prism' REFnGroupError REFnError
-_REFGE_FnE = prism' REFGE_FnE (\ case REFGE_FnE e → 𝕵 e; _ → 𝕹)
+_REFGE_FnE = prism' REFGE_FnE (\ case REFGE_FnE e → 𝓙 e; _ → 𝓝)
 
 ----------------------------------------
 
@@ -270,11 +284,11 @@ data PCREError = PCRE_U_ERROR UsageIOError
 
 _PCRE_U_ERROR ∷ Prism' PCREError UsageIOError
 _PCRE_U_ERROR = prism' (\ e → PCRE_U_ERROR e)
-                          (\ case PCRE_U_ERROR e → 𝕵 e; _ → 𝕹)
+                          (\ case PCRE_U_ERROR e → 𝓙 e; _ → 𝓝)
 
 _PCRE_REFNG_ERROR ∷ Prism' PCREError REFnGroupError
 _PCRE_REFNG_ERROR = prism' (\ e → PCRE_REFNG_ERROR e)
-                         (\ case PCRE_REFNG_ERROR e → 𝕵 e; _ → 𝕹)
+                         (\ case PCRE_REFNG_ERROR e → 𝓙 e; _ → 𝓝)
 
 
 ----------------------------------------
@@ -320,5 +334,77 @@ instance AsIOError PCREError where
 
 instance AsUsageError PCREError where
   _UsageError  = _PCRE_U_ERROR ∘ _UsageError
+
+------------------------------------------------------------
+
+{-| An encompasing error for general use in callers -}
+data PCREScriptError =
+    PCRES_SCRIPT_ERROR ScriptError | PCRES_REFNG_ERROR  REFnGroupError
+
+_PCRES_SCRIPT_ERROR ∷ Prism' PCREScriptError ScriptError
+_PCRES_SCRIPT_ERROR = prism' (\ e → PCRES_SCRIPT_ERROR e)
+                             (\ case PCRES_SCRIPT_ERROR e → 𝓙 e; _ → 𝓝)
+
+_PCRES_REFNG_ERROR ∷ Prism' PCREScriptError REFnGroupError
+_PCRES_REFNG_ERROR = prism' (\ e → PCRES_REFNG_ERROR e)
+                            (\ case PCRES_REFNG_ERROR e → 𝓙 e; _ → 𝓝)
+
+----------------------------------------
+
+instance Exception PCREScriptError
+
+--------------------
+
+instance Show PCREScriptError where
+  show (PCRES_SCRIPT_ERROR e) = show e
+  show (PCRES_REFNG_ERROR  e) = show e
+
+--------------------
+
+instance Printable PCREScriptError where
+  print (PCRES_SCRIPT_ERROR e) = print e
+  print (PCRES_REFNG_ERROR  e) = print e
+
+--------------------
+
+instance HasCallstack PCREScriptError where
+  callstack =
+    let
+      getter (PCRES_SCRIPT_ERROR  e) = e ⊣ callstack
+      getter (PCRES_REFNG_ERROR   e) = e ⊣ callstack
+      setter (PCRES_SCRIPT_ERROR  e) cs = PCRES_SCRIPT_ERROR (e & callstack ⊢ cs)
+      setter (PCRES_REFNG_ERROR   e) cs = PCRES_REFNG_ERROR  (e & callstack ⊢ cs)
+    in
+      lens getter setter
+
+----------------------------------------
+
+instance AsREGroupError PCREScriptError where
+  _REGroupError = _PCRES_REFNG_ERROR ∘ _REGroupError
+
+instance AsREFnError PCREScriptError where
+  _REFnError = _PCRES_REFNG_ERROR ∘ _REFnError
+
+instance AsIOError PCREScriptError where
+  _IOError = _PCRES_SCRIPT_ERROR ∘ _IOError
+
+instance AsUsageError PCREScriptError where
+  _UsageError  = _PCRES_SCRIPT_ERROR ∘ _UsageError
+
+instance AsCreateProcError PCREScriptError where
+ _CreateProcError = _PCRES_SCRIPT_ERROR ∘ _CreateProcError
+
+instance AsFPathError PCREScriptError where
+  _FPathError = _PCRES_SCRIPT_ERROR ∘ _FPathError
+
+instance AsProcExitError PCREScriptError where
+  _ProcExitError = _PCRES_SCRIPT_ERROR ∘ _ProcExitError
+
+instance AsProcOutputParseError PCREScriptError where
+  _ProcOutputParseError = _PCRES_SCRIPT_ERROR ∘ _ProcOutputParseError
+
+instance AsTextError PCREScriptError where
+  _TextError = _PCRES_SCRIPT_ERROR ∘ _TextError
+
 
 -- that's all, folks! ----------------------------------------------------------

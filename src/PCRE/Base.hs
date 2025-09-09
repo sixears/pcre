@@ -93,8 +93,8 @@ compRE ∷ ∀ ε η . (AsREParseError ε, MonadError ε η) ⇒ 𝕋 → η PCR
 compRE = fromRight ∘ first (_REParseError #) ∘ makeRegex
 
 __compRE__ ∷ 𝕊 → PCRE
-__compRE__ s = let __fromRight__ (𝕽 r) = r
-                   __fromRight__ (𝕷 e) = error$ [fmt|error parsing '%s': %T|]s e
+__compRE__ s = let __fromRight__ (𝓡 r) = r
+                   __fromRight__ (𝓛 e) = error$ [fmt|error parsing '%s': %T|]s e
                in  __fromRight__ ∘ compRE @REParseError $ T.pack s
 
 ------------------------------------------------------------
@@ -112,6 +112,6 @@ reSource = Text.RE.PCRE.Text.reSource ∘ unPCRE
 
 pcre ∷ QuasiQuoter
 pcre =
-  mkQQExp "PCRE" (\ s → 𝕵 (return (AppE (VarE '__compRE__) (LitE (StringL s)))))
+  mkQQExp "PCRE" (\ s → 𝓙 (return (AppE (VarE '__compRE__) (LitE (StringL s)))))
 
 -- that's all, folks! ----------------------------------------------------------

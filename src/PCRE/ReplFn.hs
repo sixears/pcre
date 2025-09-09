@@ -170,9 +170,9 @@ replFns = HashMap.fromList [ ("title", title), ("tr", tr)  ]
 applyFn ∷ ∀ ε η . (AsREFnError ε, MonadError ε η) ⇒ 𝕋 → ReplFn → η 𝕋
 applyFn t (ReplFn fnname fnargs) = do
   case replFns !? ReplFnName fnname of
-    𝕹   → throwAsREFnError $ [fmt|no such function: '%t'|] fnname
-    𝕵 f → case f t fnargs of
-            𝕷 e → throwError $ _REFnError # e
-            𝕽 r → return r
+    𝓝   → throwAsREFnError $ [fmt|no such function: '%t'|] fnname
+    𝓙 f → case f t fnargs of
+            𝓛 e → throwError $ _REFnError # e
+            𝓡 r → return r
 
 -- that's all, folks! ----------------------------------------------------------

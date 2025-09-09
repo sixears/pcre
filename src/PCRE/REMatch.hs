@@ -79,8 +79,8 @@ data REMatch α = REMatch { _sourceText     :: α
 instance Groupable (REMatch 𝕋) where
   group r (toGroupID → gid) match =
     case match !! gid of
-      𝕵 t → return t
-      𝕹   → throwAsREGroupError $
+      𝓙 t → return t
+      𝓝   → throwAsREGroupError $
               [fmt|group not found: %t in match of '%t' against re '%s'|]
                 (groupNm gid) (match ⊣ sourceText) (reSource $ unPCRE r)
 
@@ -109,8 +109,8 @@ groupTests =
       reM2 = REMatch "/foo/bar/xx-yy" ["/foo/bar/","xx","yy"]
                      (HashMap.fromList [("a","/foo/bar/"),("b","xx"),("c","yy")]) "" ""
    in testGroup "group"
-    [ testCase "=~ r1" $ assertRight (@=? 𝕵 reM1) $ (=~ "foobar") ⊳ r1
-    , testCase "=~ r2" $ assertRight (@=? 𝕵 reM2) $ (=~ "/foo/bar/xx-yy") ⊳ r2
+    [ testCase "=~ r1" $ assertRight (@=? 𝓙 reM1) $ (=~ "foobar") ⊳ r1
+    , testCase "=~ r2" $ assertRight (@=? 𝓙 reM2) $ (=~ "/foo/bar/xx-yy") ⊳ r2
     ]
 
 ----------------------------------------
@@ -140,7 +140,7 @@ instance HasIndex (REMatch α) where
   type Elem    (REMatch α) = α
 --  index (GIDName t) m = _sourceCaptures m !? t
   index (GIDName t) m = (m ⊣ sourceCaptures) !? t
-  index (GIDNum  0) m = 𝕵 $ m ⊣ sourceText
+  index (GIDNum  0) m = 𝓙 $ m ⊣ sourceText
   index (GIDNum  i) m = (m ⊣ sourceGroups) !! (i -1)
 
 {- `captureNames`, when enacted on a PCRE match, on something like
