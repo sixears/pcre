@@ -96,12 +96,12 @@ parseOptions =
           ⊵ some1 (strArgument (metavar "MATCH-TARGET"))
           ⊵ flag NoShowREMatch ShowREMatch (ю [short 'r', long "show-re-match"
                                               , help "show REMatch datum"])
-          ⊵ option (𝕵 ⊳ parsecReader) (ю [ short   'p'
+          ⊵ option (𝓙 ⊳ parsecReader) (ю [ short   'p'
                                          , long    "replace"
                                          , long    "replacement"
                                          , metavar "REPLACEMENT"
                                          , help    "show effected replacement"
-                                         , value   𝕹
+                                         , value   𝓝
                                          ])
 
 ----------------------------------------
@@ -130,14 +130,14 @@ printMatch opts t = do
     sayT "--------"
     sayT "REMatch"
     case (opts ⊣ pcre) ≃ t of
-      𝕹   → sayT "no match"
-      𝕵 m → say ∘ chomp ∘ indent 2 $ toText m
+      𝓝   → sayT "no match"
+      𝓙 m → say ∘ chomp ∘ indent 2 $ toText m
   case opts ⊣ replacement of
-    𝕹   → return ()
-    𝕵 r → do sayT "--------"
+    𝓝   → return ()
+    𝓙 r → do sayT "--------"
              replace (REPlacement (opts ⊣ pcre) r) t ≫ \ case
-               𝕹 → sayT "no replace"
-               𝕵 p → sayT $ [fmt|replacement »%T«: %w|] r p
+               𝓝 → sayT "no replace"
+               𝓙 p → sayT $ [fmt|replacement »%T«: %w|] r p
   sayT "================\n"
 
 ----------------------------------------

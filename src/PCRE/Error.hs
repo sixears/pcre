@@ -170,55 +170,6 @@ reGroupError t = REGroupError t callStack
 
 ------------------------------------------------------------
 
-{- | either a `REGroupError` or a `REFnError` -}
-data REFnGroupError = REFGE_GroupE REGroupError
-                    | REFGE_FnE    REFnError
-  deriving (Eq,Show)
-
-----------------------------------------
-
-_REFGE_GroupE ∷ Prism' REFnGroupError REGroupError
-_REFGE_GroupE = prism' REFGE_GroupE (\ case REFGE_GroupE e → 𝓙 e; _ → 𝓝)
-
-----------
-
-_REFGE_FnE ∷ Prism' REFnGroupError REFnError
-_REFGE_FnE = prism' REFGE_FnE (\ case REFGE_FnE e → 𝓙 e; _ → 𝓝)
-
-----------------------------------------
-
-instance Exception REFnGroupError
-
---------------------
-
-instance Printable REFnGroupError where
-  print (REFGE_GroupE e) = print e
-  print (REFGE_FnE    e) = print e
-
---------------------
-
-instance HasCallstack REFnGroupError where
-  callstack =
-    let
-      getter (REFGE_GroupE e)    = e ⊣ callstack
-      getter (REFGE_FnE    e)    = e ⊣ callstack
-      setter (REFGE_GroupE e) cs = REFGE_GroupE (e & callstack ⊢ cs)
-      setter (REFGE_FnE    e) cs = REFGE_FnE    (e & callstack ⊢ cs)
-    in
-      lens getter setter
-
-----------------------------------------
-
-instance AsREGroupError REFnGroupError where
-  _REGroupError = _REFGE_GroupE ∘ _REGroupError
-
---------------------
-
-instance AsREFnError REFnGroupError where
-  _REFnError = _REFGE_FnE ∘ _REFnError
-
-------------------------------------------------------------
-
 {- | error when calling an RE function; typically no such function (by name),
      else wrong argument count or type -}
 -- really should divvy up into
@@ -277,9 +228,121 @@ throwAsREFnError = throwError ∘ (_REFnError #) ∘ reFnError
 
 ------------------------------------------------------------
 
+{- | either a `REGroupError` or a `REFnError` -}
+data REFnGroupError = REFGE_GroupE REGroupError
+                    | REFGE_FnE    REFnError
+  deriving (Eq,Show)
+
+----------------------------------------
+
+_REFGE_GroupE ∷ Prism' REFnGroupError REGroupError
+_REFGE_GroupE = prism' REFGE_GroupE (\ case REFGE_GroupE e → 𝓙 e; _ → 𝓝)
+
+----------
+
+_REFGE_FnE ∷ Prism' REFnGroupError REFnError
+_REFGE_FnE = prism' REFGE_FnE (\ case REFGE_FnE e → 𝓙 e; _ → 𝓝)
+
+----------------------------------------
+
+instance Exception REFnGroupError
+
+--------------------
+
+instance Printable REFnGroupError where
+  print (REFGE_GroupE e) = print e
+  print (REFGE_FnE    e) = print e
+
+--------------------
+
+instance HasCallstack REFnGroupError where
+  callstack =
+    let
+      getter (REFGE_GroupE e)    = e ⊣ callstack
+      getter (REFGE_FnE    e)    = e ⊣ callstack
+      setter (REFGE_GroupE e) cs = REFGE_GroupE (e & callstack ⊢ cs)
+      setter (REFGE_FnE    e) cs = REFGE_FnE    (e & callstack ⊢ cs)
+    in
+      lens getter setter
+
+----------------------------------------
+
+instance AsREGroupError REFnGroupError where
+  _REGroupError = _REFGE_GroupE ∘ _REGroupError
+
+--------------------
+
+instance AsREFnError REFnGroupError where
+  _REFnError = _REFGE_FnE ∘ _REFnError
+
+------------------------------------------------------------
+
+{- | either a `REParseError`, a `REGroupError` or a `REFnError` -}
+data REParseFnGroupError = REPFGE_ParseE REParseError
+                         | REPFGE_GroupE REGroupError
+                         | REPFGE_FnE    REFnError
+  deriving (Eq,Show)
+
+----------------------------------------
+
+_REPFGE_ParseE ∷ Prism' REParseFnGroupError REParseError
+_REPFGE_ParseE = prism' REPFGE_ParseE (\ case REPFGE_ParseE e → 𝓙 e; _ → 𝓝)
+
+----------
+
+_REPFGE_GroupE ∷ Prism' REParseFnGroupError REGroupError
+_REPFGE_GroupE = prism' REPFGE_GroupE (\ case REPFGE_GroupE e → 𝓙 e; _ → 𝓝)
+
+----------
+
+_REPFGE_FnE ∷ Prism' REParseFnGroupError REFnError
+_REPFGE_FnE = prism' REPFGE_FnE (\ case REPFGE_FnE e → 𝓙 e; _ → 𝓝)
+
+----------------------------------------
+
+instance Exception REParseFnGroupError
+
+--------------------
+
+instance Printable REParseFnGroupError where
+  print (REPFGE_ParseE e) = print e
+  print (REPFGE_GroupE e) = print e
+  print (REPFGE_FnE    e) = print e
+
+--------------------
+
+instance HasCallstack REParseFnGroupError where
+  callstack =
+    let
+      getter (REPFGE_ParseE e)    = e ⊣ callstack
+      getter (REPFGE_GroupE e)    = e ⊣ callstack
+      getter (REPFGE_FnE    e)    = e ⊣ callstack
+      setter (REPFGE_ParseE e) cs = REPFGE_ParseE (e & callstack ⊢ cs)
+      setter (REPFGE_GroupE e) cs = REPFGE_GroupE (e & callstack ⊢ cs)
+      setter (REPFGE_FnE    e) cs = REPFGE_FnE    (e & callstack ⊢ cs)
+    in
+      lens getter setter
+
+----------------------------------------
+
+instance AsREParseError REParseFnGroupError where
+  _REParseError = _REPFGE_ParseE ∘ _REParseError
+
+--------------------
+
+instance AsREGroupError REParseFnGroupError where
+  _REGroupError = _REPFGE_GroupE ∘ _REGroupError
+
+--------------------
+
+instance AsREFnError REParseFnGroupError where
+  _REFnError = _REPFGE_FnE ∘ _REFnError
+
+------------------------------------------------------------
+
 {-| An error for the `pcre` executable, encompassing `UsageIOError` and
    `REFnGroupError` -}
-data PCREError = PCRE_U_ERROR UsageIOError
+data PCREError = PCRE_U_ERROR      UsageIOError
                | PCRE_REFNG_ERROR  REFnGroupError
 
 _PCRE_U_ERROR ∷ Prism' PCREError UsageIOError
@@ -339,15 +402,15 @@ instance AsUsageError PCREError where
 
 {-| An encompasing error for general use in callers -}
 data PCREScriptError =
-    PCRES_SCRIPT_ERROR ScriptError | PCRES_REFNG_ERROR  REFnGroupError
+    PCRES_SCRIPT_ERROR ScriptError | PCRES_REPFNG_ERROR REParseFnGroupError
 
 _PCRES_SCRIPT_ERROR ∷ Prism' PCREScriptError ScriptError
 _PCRES_SCRIPT_ERROR = prism' (\ e → PCRES_SCRIPT_ERROR e)
                              (\ case PCRES_SCRIPT_ERROR e → 𝓙 e; _ → 𝓝)
 
-_PCRES_REFNG_ERROR ∷ Prism' PCREScriptError REFnGroupError
-_PCRES_REFNG_ERROR = prism' (\ e → PCRES_REFNG_ERROR e)
-                            (\ case PCRES_REFNG_ERROR e → 𝓙 e; _ → 𝓝)
+_PCRES_REPFNG_ERROR ∷ Prism' PCREScriptError REParseFnGroupError
+_PCRES_REPFNG_ERROR = prism' (\ e → PCRES_REPFNG_ERROR e)
+                             (\ case PCRES_REPFNG_ERROR e → 𝓙 e; _ → 𝓝)
 
 ----------------------------------------
 
@@ -357,33 +420,36 @@ instance Exception PCREScriptError
 
 instance Show PCREScriptError where
   show (PCRES_SCRIPT_ERROR e) = show e
-  show (PCRES_REFNG_ERROR  e) = show e
+  show (PCRES_REPFNG_ERROR e) = show e
 
 --------------------
 
 instance Printable PCREScriptError where
   print (PCRES_SCRIPT_ERROR e) = print e
-  print (PCRES_REFNG_ERROR  e) = print e
+  print (PCRES_REPFNG_ERROR e) = print e
 
 --------------------
 
 instance HasCallstack PCREScriptError where
   callstack =
     let
-      getter (PCRES_SCRIPT_ERROR  e) = e ⊣ callstack
-      getter (PCRES_REFNG_ERROR   e) = e ⊣ callstack
-      setter (PCRES_SCRIPT_ERROR  e) cs = PCRES_SCRIPT_ERROR (e & callstack ⊢ cs)
-      setter (PCRES_REFNG_ERROR   e) cs = PCRES_REFNG_ERROR  (e & callstack ⊢ cs)
+      getter (PCRES_SCRIPT_ERROR e) = e ⊣ callstack
+      getter (PCRES_REPFNG_ERROR e) = e ⊣ callstack
+      setter (PCRES_SCRIPT_ERROR e) cs = PCRES_SCRIPT_ERROR (e & callstack ⊢ cs)
+      setter (PCRES_REPFNG_ERROR e) cs = PCRES_REPFNG_ERROR (e & callstack ⊢ cs)
     in
       lens getter setter
 
 ----------------------------------------
 
 instance AsREGroupError PCREScriptError where
-  _REGroupError = _PCRES_REFNG_ERROR ∘ _REGroupError
+  _REGroupError = _PCRES_REPFNG_ERROR ∘ _REGroupError
 
 instance AsREFnError PCREScriptError where
-  _REFnError = _PCRES_REFNG_ERROR ∘ _REFnError
+  _REFnError = _PCRES_REPFNG_ERROR ∘ _REFnError
+
+instance AsREParseError PCREScriptError where
+  _REParseError = _PCRES_REPFNG_ERROR ∘ _REParseError
 
 instance AsIOError PCREScriptError where
   _IOError = _PCRES_SCRIPT_ERROR ∘ _IOError
