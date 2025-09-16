@@ -10,7 +10,7 @@ name:                pcre
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.3.0
+version:             0.1.4.0
 
 -- A short (one-line) description of the package.
 synopsis:            handle PCRE-based REs, including textual replacements
@@ -52,6 +52,7 @@ library
   exposed-modules:    PCRE
                     , PCRE.Base
                     , PCRE.Error
+                    , PCRE.GroupID
                     , PCRE.Match
                     , PCRE.REMatch
                     , PCRE.REPlacement
@@ -59,8 +60,7 @@ library
                     , PCRE.T.Tests
 
   -- modules included in this library but not exported.
-  other-modules:      PCRE.GroupID
-                    , PCRE.ReplExpr
+  other-modules:      PCRE.ReplExpr
                     , PCRE.ReplFn
 
   default-extensions: DeriveLift

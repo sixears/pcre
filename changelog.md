@@ -1,3 +1,7 @@
+0.1.4.0 2025-09-16
+==================
+- Export PCRE.GroupID
+
 0.1.3.0 2025-09-10
 ==================
 - PCREScriptError is also an instance of AsREParseError
