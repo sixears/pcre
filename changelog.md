@@ -1,3 +1,8 @@
+0.1.5.0 2025-09-20
+==================
+- Fix capture-name lookup for non-zero-width usage; add error about using zero-width assertions with
+  capture names
+
 0.1.4.0 2025-09-16
 ==================
 - Export PCRE.GroupID

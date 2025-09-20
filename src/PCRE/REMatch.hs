@@ -1,6 +1,11 @@
 {-# LANGUAGE UnicodeSyntax #-}
 {- | Encapsulation of groups (numbered), captures (by name), source, pre- and
-     post-sequences for a PCRE match. -}
+     post-sequences for a PCRE match.
+
+     BEWARE: When using zero-width assertions, capture names are borked by
+     the Match type, meaning we'll get Exceptions.  I've stared at it, but cannot
+     see a workaround :-(
+-}
 
 module PCRE.REMatch
   ( REMatch
@@ -18,22 +23,28 @@ module PCRE.REMatch
   ) where
 
 import Base1T
+import Prelude  ( error )
 
 -- base --------------------------------
 
-import Data.List  ( sortOn, zip )
-import Data.Maybe ( isJust )
+import Data.Foldable  ( maximum )
+import Data.List      ( sortOn, zip )
+import Data.Maybe     ( isJust )
 
 -- lens --------------------------------
 
 import Control.Lens.Getter ( view )
 
+-- natural -----------------------------
+
+import Natural.Length  ( length )
+
 -- regex -------------------------------
 
-import Text.RE.Replace ( Capture(captureLength, captureOffset, captureSource, capturedText),
-                         CaptureID(IsCaptureOrdinal),
-                         CaptureName(getCaptureName),
-                         CaptureOrdinal(CaptureOrdinal), Match, captureNames,
+import Text.RE.Replace ( Capture(captureLength, captureOffset, captureSource,
+                                 capturedText),
+                         CaptureID(IsCaptureOrdinal),CaptureName(getCaptureName),
+                         Match, captureNames, getCaptureOrdinal, matchArray,
                          matchCaptures, (!$$) )
 
 -- regex-with-pcre ---------------------
@@ -105,12 +116,31 @@ groupTests =
       r1 = compre "${iggy}(fo+)${pop}(.ar)"
       reM1 = REMatch "foobar" ["foo","bar"]
                      (HashMap.fromList [("iggy","foo"),("pop","bar")]) "" ""
+{- BEWARE!  CAPTURE NAMES USED AFTER ZERO-WIDTH ASSERTIONS ARE BORKED
+
       r2 = compre "^${a}(.*/)?(?=[^/]+$)${b}(.*)(?:-)${c}(.*)$"
       reM2 = REMatch "/foo/bar/xx-yy" ["/foo/bar/","xx","yy"]
-                     (HashMap.fromList [("a","/foo/bar/"),("b","xx"),("c","yy")]) "" ""
+                     (HashMap.fromList [("a","/foo/bar/"),("b","xx"),("c","yy")])
+                     "" ""
+      r3 = compre "^${a}(.*/)?(?=[^/]+$)(.*)(?:-)${c}(.*)$"
+      reM3 = REMatch "/foo/bar/xx-yy" ["/foo/bar/","yy"]
+                     (HashMap.fromList [("a","/foo/bar/"),("c","yy")])
+                     "" ""
+-}
+
+      r2 = compre "^${a}(.*/)?${b}(.*)(?:-)${c}(.*)$"
+      reM2 = REMatch "/foo/bar/xx-yy" ["/foo/bar/","xx","yy"]
+                     (HashMap.fromList [("a","/foo/bar/"),("b","xx"),("c","yy")])
+                     "" ""
+      r3 = compre "^${a}(.*/)?.*(?:-)${c}(.*)$"
+      reM3 = REMatch "/foo/bar/xx-yy" ["/foo/bar/","yy"]
+                     (HashMap.fromList [("a","/foo/bar/"),("c","yy")])
+                     "" ""
+
    in testGroup "group"
-    [ testCase "=~ r1" $ assertRight (@=? 𝓙 reM1) $ (=~ "foobar") ⊳ r1
-    , testCase "=~ r2" $ assertRight (@=? 𝓙 reM2) $ (=~ "/foo/bar/xx-yy") ⊳ r2
+    [ testCase "=~ r1" $ assertRight (𝓙 reM1 @=?) $ (=~ "foobar") ⊳ r1
+    , testCase "=~ r2" $ assertRight (𝓙 reM2 @=?) $ (=~ "/foo/bar/xx-yy") ⊳ r2
+    , testCase "=~ r3" $ assertRight (𝓙 reM3 @=?) $ (=~ "/foo/bar/xx-yy") ⊳ r3
     ]
 
 ----------------------------------------
@@ -138,24 +168,9 @@ sourcePost = lens _sourcePost (\ rem st → rem { _sourcePost = st })
 instance HasIndex (REMatch α) where
   type Indexer (REMatch α) = GroupID
   type Elem    (REMatch α) = α
---  index (GIDName t) m = _sourceCaptures m !? t
   index (GIDName t) m = (m ⊣ sourceCaptures) !? t
   index (GIDNum  0) m = 𝓙 $ m ⊣ sourceText
   index (GIDNum  i) m = (m ⊣ sourceGroups) !! (i -1)
-
-{- `captureNames`, when enacted on a PCRE match, on something like
-   `^${a}(.*/)?(?=[^/]+$)${b}(.*)(?:-)${c}(.*)$`
-   returns something like `a ⇒ 1, b ⇒ 3, c ⇒ 4`; that is, the zero-width group
-   is counted in the ordinals.  However, !$$ doesn't include those non-matching
-   groups when counting ordinals; it expects contiguous numbers.
--}
-reindexedCaptureNames ∷ Match α → [(CaptureName, CaptureOrdinal)]
-reindexedCaptureNames m =
-  let -- sortByOrdinal = sortBy (\ (_,x) (_,y) → x `compare` y)
-      capNamesList n = HashMap.toList $ captureNames n
-      ord j          = CaptureOrdinal $ fromIntegral j
-   in [ (n,ord i) | (i,(n,_)) ← zip [(1∷ℕ)..] $ sortOn snd $ capNamesList m ]
-
 
 {-| convert a `Match 𝕋` to a `𝕄 (REMatch 𝕋)` (in particular, creating a
     `HashMap` of named groups) -}
@@ -163,23 +178,35 @@ reMatch ∷ Match 𝕋 → 𝕄 (REMatch 𝕋)
 reMatch m = matchCaptures m ⊲
   \ (cap,caps) →
      let n !$$! i = n !$$ IsCaptureOrdinal i
-         cs       = foldMapWithKey
-                      (\ nm i → HashMap.singleton (getCaptureName nm)
-                                                  (m !$$! i))
-                      -- captureNames returns something like
-                      -- a ⇒ 1, b ⇒ 3, c ⇒ 4
-                      -- for ^${a}(.*/)?(?=[^/]+$)${b}(.*)(?:-)${c}(.*)$
-                      -- that is, the non-matching group is counted in the
-                      -- ordinals; but !$$ doesn't include those non-matching
-                      -- groups when counting ordinals :-(
-                      -- this may be a conflict between regex (which includes
-                      -- Posix REs) and PCRE
-                      -- (captureNames m)
-                      (fromList $ reindexedCaptureNames m)
+         cs       =
+           -- detect problems with capture lookup; specifically, if the regex
+           -- includes zero-width assertions, the by-name capture borks, I think
+           -- because the zero-width group gets assigned an ordinal but the
+           -- capture never appears in the matchArray.  While it's not obvious
+           -- why that should affect below, a consequence is that !$$ gets
+           -- skewed.
+
+           -- we try to detect this by looking for when CaptureOrdinals refer to
+           -- positions not present in the matchArray
+
+           let max_ordinal ∷ ℕ = getCaptureOrdinal ⊳ toList (captureNames m)
+                                                   & maximum & fromIntegral
+               match_count ∷ ℕ = length $ matchArray m
+               msg = ю [ "match captures refer to ordinals out-of-range; "
+                       , "maybe there are zero-width assertions in play?" ]
+           in  if max_ordinal ≥ match_count
+               then error $ [fmt|%s %w (%d ≥ %d)|] msg m max_ordinal match_count
+               else foldMapWithKey (\ nm i → HashMap.singleton(getCaptureName nm)
+                                                              (m !$$! i))
+                                   (captureNames m)
          pre      = take (captureOffset cap) (captureSource cap)
          post     = drop (captureLength cap + captureOffset cap)
                          (captureSource cap)
-      in REMatch (capturedText cap) (capturedText ⊳ caps) cs pre post
+     in  REMatch { _sourceText     = capturedText cap
+                 , _sourceGroups   = capturedText ⊳ caps
+                 , _sourceCaptures = cs
+                 , _sourcePre      = pre
+                 , _sourcePost     = post }
 
 
 {-| match some `𝕋` against an `RE`; returning an `REMatch` -}
