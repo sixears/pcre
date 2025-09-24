@@ -1,3 +1,9 @@
+0.1.6.0 2025-09-24
+==================
+
+- PCREScriptError is now an instance of AsParseError (inherited from
+  Stdmain.ScriptError)
+
 0.1.5.0 2025-09-20
 ==================
 - Fix capture-name lookup for non-zero-width usage; add error about using zero-width assertions with

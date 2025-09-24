@@ -23,6 +23,10 @@ import FPath.Error.FPathError ( AsFPathError(_FPathError) )
 import MonadIO.Error.CreateProcError ( AsCreateProcError(_CreateProcError) )
 import MonadIO.Error.ProcExitError   ( AsProcExitError(_ProcExitError) )
 
+-- parsec-plus-base --------------------
+
+import ParsecPlusBase  ( AsParseError( _ParseError ) )
+
 -- stdmain -----------------------------
 
 import StdMain.UsageError            ( AsUsageError( _UsageError ),UsageIOError )
@@ -472,5 +476,7 @@ instance AsProcOutputParseError PCREScriptError where
 instance AsTextError PCREScriptError where
   _TextError = _PCRES_SCRIPT_ERROR ∘ _TextError
 
+instance AsParseError PCREScriptError where
+  _ParseError = _PCRES_SCRIPT_ERROR ∘ _ParseError
 
 -- that's all, folks! ----------------------------------------------------------

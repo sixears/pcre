@@ -10,7 +10,7 @@ name:                pcre
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.5.0
+version:             0.1.6.0
 
 -- A short (one-line) description of the package.
 synopsis:            handle PCRE-based REs, including textual replacements
@@ -100,7 +100,7 @@ library
                    , parsec-plus      >= 1.1.1.44
                    , parser-plus      >= 1.0.7.29
                    , quasiquoting     >= 1.0.1.32
-                   , stdmain          >= 1.6.3.2
+                   , stdmain          >= 1.6.4.0
 
   -- Directories containing source files.
   hs-source-dirs:      src
